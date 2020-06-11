@@ -39,7 +39,7 @@ public class DocumentBuilderFactoryUtils {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
 		try {
-			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
 		} catch (IllegalArgumentException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_DTD + " property not supported by " + factory.getClass().getCanonicalName());
@@ -47,7 +47,7 @@ public class DocumentBuilderFactoryUtils {
 		}
 
 		try {
-			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
 		} catch (IllegalArgumentException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_SCHEMA + " property not supported by " + factory.getClass().getCanonicalName());

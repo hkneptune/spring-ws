@@ -40,7 +40,7 @@ public class SchemaFactoryUtils {
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(schemaLanguage);
 
 		try {
-			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
 		} catch (SAXNotRecognizedException | SAXNotSupportedException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_DTD + " property not supported by " + schemaFactory.getClass().getCanonicalName());
@@ -49,7 +49,7 @@ public class SchemaFactoryUtils {
 		}
 
 		try {
-			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file,jar:file");
+			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
 		} catch (SAXNotRecognizedException | SAXNotSupportedException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_SCHEMA + " property not supported by " + schemaFactory.getClass().getCanonicalName());
