@@ -20,6 +20,7 @@ import javax.xml.validation.SchemaFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.ResourceUtils;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 
@@ -40,7 +41,7 @@ public class SchemaFactoryUtils {
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(schemaLanguage);
 
 		try {
-			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
+			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
 		} catch (SAXNotRecognizedException | SAXNotSupportedException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_DTD + " property not supported by " + schemaFactory.getClass().getCanonicalName());
@@ -49,7 +50,7 @@ public class SchemaFactoryUtils {
 		}
 
 		try {
-			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
+			schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ResourceUtils.URL_PROTOCOL_FILE + "," + "jar:file" + "," + ResourceUtils.URL_PROTOCOL_WSJAR);
 		} catch (SAXNotRecognizedException | SAXNotSupportedException e) {
 			if (log.isWarnEnabled()) {
 				log.warn(XMLConstants.ACCESS_EXTERNAL_SCHEMA + " property not supported by " + schemaFactory.getClass().getCanonicalName());
