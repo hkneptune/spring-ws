@@ -16,28 +16,28 @@
 
 package org.springframework.ws.transport.http;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.w3c.dom.Document;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.ws.wsdl.WsdlDefinition;
 import org.springframework.ws.wsdl.wsdl11.SimpleWsdl11Definition;
-import org.springframework.xml.transform.StringSource;
 import org.springframework.xml.DocumentBuilderFactoryUtils;
-
-import static org.custommonkey.xmlunit.XMLAssert.*;
-import static org.easymock.EasyMock.*;
+import org.springframework.xml.transform.StringSource;
+import org.w3c.dom.Document;
+import org.xmlunit.assertj.XmlAssert;
 
 public class WsdlDefinitionHandlerAdapterTest {
 
@@ -49,8 +49,9 @@ public class WsdlDefinitionHandlerAdapterTest {
 
 	private MockHttpServletResponse response;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		adapter = new WsdlDefinitionHandlerAdapter();
 		definitionMock = createMock(WsdlDefinition.class);
 		adapter.afterPropertiesSet();
@@ -60,6 +61,7 @@ public class WsdlDefinitionHandlerAdapterTest {
 
 	@Test
 	public void handleGet() throws Exception {
+
 		request.setMethod(HttpTransportConstants.METHOD_GET);
 		String definition = "<definition xmlns='http://schemas.xmlsoap.org/wsdl/'/>";
 		expect(definitionMock.getSource()).andReturn(new StringSource(definition));
@@ -67,26 +69,29 @@ public class WsdlDefinitionHandlerAdapterTest {
 		replay(definitionMock);
 
 		adapter.handle(request, response, definitionMock);
-		assertXMLEqual(definition, response.getContentAsString());
+
+		XmlAssert.assertThat(response.getContentAsString()).and(definition).ignoreWhitespace().areIdentical();
 
 		verify(definitionMock);
 	}
 
 	@Test
 	public void handleNonGet() throws Exception {
+
 		request.setMethod(HttpTransportConstants.METHOD_POST);
 
 		replay(definitionMock);
 
 		adapter.handle(request, response, definitionMock);
-		Assert.assertEquals("METHOD_NOT_ALLOWED expected", HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-				response.getStatus());
+
+		assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 
 		verify(definitionMock);
 	}
 
 	@Test
 	public void transformLocations() throws Exception {
+
 		adapter.setTransformLocations(true);
 		request.setMethod(HttpTransportConstants.METHOD_GET);
 		request.setScheme("http");
@@ -105,13 +110,15 @@ public class WsdlDefinitionHandlerAdapterTest {
 		Document result = documentBuilder.parse(getClass().getResourceAsStream("wsdl11-input.wsdl"));
 		adapter.transformLocations(result, request);
 		Document expectedDocument = documentBuilder.parse(getClass().getResourceAsStream("wsdl11-expected.wsdl"));
-		assertXMLEqual("Invalid result", expectedDocument, result);
+
+		XmlAssert.assertThat(result).and(expectedDocument).ignoreWhitespace().areIdentical();
 
 		verify(definitionMock);
 	}
 
 	@Test
 	public void transformLocationFullUrl() throws Exception {
+
 		request.setScheme("http");
 		request.setServerName("example.com");
 		request.setServerPort(8080);
@@ -121,12 +128,14 @@ public class WsdlDefinitionHandlerAdapterTest {
 		String oldLocation = "http://localhost:8080/context/service";
 
 		String result = adapter.transformLocation(oldLocation, request);
-		Assert.assertNotNull("No result", result);
-		Assert.assertEquals("Invalid result", new URI("http://example.com:8080/context/service"), new URI(result));
+
+		assertThat(result).isNotNull();
+		assertThat(new URI(result)).isEqualTo(new URI("http://example.com:8080/context/service"));
 	}
 
 	@Test
 	public void transformLocationEmptyContextFullUrl() throws Exception {
+
 		request.setScheme("http");
 		request.setServerName("example.com");
 		request.setServerPort(8080);
@@ -135,12 +144,14 @@ public class WsdlDefinitionHandlerAdapterTest {
 		String oldLocation = "http://localhost:8080/service";
 
 		String result = adapter.transformLocation(oldLocation, request);
-		Assert.assertNotNull("No result", result);
-		Assert.assertEquals("Invalid result", new URI("http://example.com:8080/service"), new URI(result));
+
+		assertThat(result).isNotNull();
+		assertThat(new URI(result)).isEqualTo(new URI("http://example.com:8080/service"));
 	}
 
 	@Test
 	public void transformLocationRelativeUrl() throws Exception {
+
 		request.setScheme("http");
 		request.setServerName("example.com");
 		request.setServerPort(8080);
@@ -150,12 +161,14 @@ public class WsdlDefinitionHandlerAdapterTest {
 		String oldLocation = "/service";
 
 		String result = adapter.transformLocation(oldLocation, request);
-		Assert.assertNotNull("No result", result);
-		Assert.assertEquals("Invalid result", new URI("http://example.com:8080/context/service"), new URI(result));
+
+		assertThat(result).isNotNull();
+		assertThat(new URI(result)).isEqualTo(new URI("http://example.com:8080/context/service"));
 	}
 
 	@Test
 	public void transformLocationEmptyContextRelativeUrl() throws Exception {
+
 		request.setScheme("http");
 		request.setServerName("example.com");
 		request.setServerPort(8080);
@@ -164,12 +177,14 @@ public class WsdlDefinitionHandlerAdapterTest {
 		String oldLocation = "/service";
 
 		String result = adapter.transformLocation(oldLocation, request);
-		Assert.assertNotNull("No result", result);
-		Assert.assertEquals("Invalid result", new URI("http://example.com:8080/service"), new URI(result));
+
+		assertThat(result).isNotNull();
+		assertThat(new URI(result)).isEqualTo(new URI("http://example.com:8080/service"));
 	}
 
 	@Test
 	public void handleSimpleWsdl11DefinitionWithoutTransformLocations() throws Exception {
+
 		adapter.setTransformLocations(false);
 		request.setMethod(HttpTransportConstants.METHOD_GET);
 		request.setScheme("http");
@@ -180,8 +195,8 @@ public class WsdlDefinitionHandlerAdapterTest {
 		request.setPathInfo(null);
 		request.setRequestURI("/context/service.wsdl");
 
-		SimpleWsdl11Definition definition =
-				new SimpleWsdl11Definition(new ClassPathResource("echo-input.wsdl", getClass()));
+		SimpleWsdl11Definition definition = new SimpleWsdl11Definition(
+				new ClassPathResource("echo-input.wsdl", getClass()));
 
 		adapter.handle(request, response, definition);
 
@@ -193,11 +208,13 @@ public class WsdlDefinitionHandlerAdapterTest {
 
 		documentBuilder = documentBuilderFactory.newDocumentBuilder();
 		Document expectedDocument = documentBuilder.parse(getClass().getResourceAsStream("echo-input.wsdl"));
-		assertXMLEqual("Invalid WSDL returned", expectedDocument, resultingDocument);
+
+		XmlAssert.assertThat(resultingDocument).and(expectedDocument).ignoreWhitespace().areIdentical();
 	}
 
 	@Test
 	public void handleSimpleWsdl11DefinitionWithTransformLocation() throws Exception {
+
 		adapter.setTransformLocations(true);
 		adapter.setTransformSchemaLocations(true);
 
@@ -210,8 +227,8 @@ public class WsdlDefinitionHandlerAdapterTest {
 		request.setPathInfo(null);
 		request.setRequestURI("/context/service.wsdl");
 
-		SimpleWsdl11Definition definition =
-				new SimpleWsdl11Definition(new ClassPathResource("echo-input.wsdl", getClass()));
+		SimpleWsdl11Definition definition = new SimpleWsdl11Definition(
+				new ClassPathResource("echo-input.wsdl", getClass()));
 
 		adapter.handle(request, response, definition);
 
@@ -223,7 +240,7 @@ public class WsdlDefinitionHandlerAdapterTest {
 
 		documentBuilder = documentBuilderFactory.newDocumentBuilder();
 		Document expectedDocument = documentBuilder.parse(getClass().getResourceAsStream("echo-expected.wsdl"));
-		assertXMLEqual("Invalid WSDL returned", expectedDocument, resultingDocument);
-	}
 
+		XmlAssert.assertThat(resultingDocument).and(expectedDocument).ignoreWhitespace().areIdentical();
+	}
 }

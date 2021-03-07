@@ -16,17 +16,18 @@
 
 package org.springframework.ws.soap;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.junit.Test;
-import org.xml.sax.SAXParseException;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 import org.springframework.ws.mime.AbstractMimeMessageTestCase;
@@ -38,11 +39,8 @@ import org.springframework.ws.transport.TransportConstants;
 import org.springframework.xml.transform.StringResult;
 import org.springframework.xml.validation.XmlValidator;
 import org.springframework.xml.validation.XmlValidatorFactory;
-
-import static org.custommonkey.xmlunit.XMLAssert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.xml.sax.SAXParseException;
+import org.xmlunit.assertj.XmlAssert;
 
 public abstract class AbstractSoapMessageTestCase extends AbstractMimeMessageTestCase {
 
@@ -56,6 +54,7 @@ public abstract class AbstractSoapMessageTestCase extends AbstractMimeMessageTes
 
 	@Override
 	protected MimeMessage createMimeMessage() throws Exception {
+
 		soapMessage = createSoapMessage();
 		return soapMessage;
 	}
@@ -64,45 +63,57 @@ public abstract class AbstractSoapMessageTestCase extends AbstractMimeMessageTes
 
 	@Test
 	public void testValidate() throws Exception {
-		XmlValidator validator =
-				XmlValidatorFactory.createValidator(getSoapSchemas(), XmlValidatorFactory.SCHEMA_W3C_XML);
+
+		XmlValidator validator = XmlValidatorFactory.createValidator(getSoapSchemas(), XmlValidatorFactory.SCHEMA_W3C_XML);
 		SAXParseException[] errors = validator.validate(soapMessage.getEnvelope().getSource());
+
 		if (errors.length > 0) {
 			fail(StringUtils.arrayToCommaDelimitedString(errors));
 		}
 	}
 
 	@Test
-	public void testSoapAction() throws Exception {
-		assertEquals("Invalid default SOAP Action", "\"\"", soapMessage.getSoapAction());
+	public void testSoapAction() {
+
+		assertThat(soapMessage.getSoapAction()).isEqualTo("\"\"");
+
 		soapMessage.setSoapAction("SoapAction");
-		assertEquals("Invalid SOAP Action", "\"SoapAction\"", soapMessage.getSoapAction());
+
+		assertThat(soapMessage.getSoapAction()).isEqualTo("\"SoapAction\"");
 	}
 
 	@Test
 	public void testCharsetAttribute() throws Exception {
+
 		MockTransportOutputStream outputStream = new MockTransportOutputStream(new ByteArrayOutputStream());
 		soapMessage.writeTo(outputStream);
 		Map<String, String> headers = outputStream.getHeaders();
 		String contentType = headers.get(TransportConstants.HEADER_CONTENT_TYPE);
+
 		if (contentType != null) {
+
 			Pattern charsetPattern = Pattern.compile("charset\\s*=\\s*([^;]+)");
 			Matcher matcher = charsetPattern.matcher(contentType);
+
 			if (matcher.find() && matcher.groupCount() == 1) {
+
 				String charset = matcher.group(1).trim();
-				assertTrue("Invalid charset", charset.indexOf('"') < 0);
+				assertThat(charset.indexOf('"')).isLessThan(0);
 			}
 		}
 	}
 
 	@Test
 	public void testSetStreamingPayload() throws Exception {
+
 		if (!(soapMessage instanceof StreamingWebServiceMessage)) {
 			return;
 		}
+
 		StreamingWebServiceMessage streamingMessage = (StreamingWebServiceMessage) soapMessage;
 
 		final QName name = new QName("http://springframework.org", "root", "");
+
 		streamingMessage.setStreamingPayload(new StreamingPayload() {
 			public QName getName() {
 				return name;
@@ -123,7 +134,8 @@ public abstract class AbstractSoapMessageTestCase extends AbstractMimeMessageTes
 		transformer.transform(streamingMessage.getPayloadSource(), result);
 
 		String expected = "<root xmlns='http://springframework.org'><child>Foo</child></root>";
-		assertXMLEqual(expected, result.toString());
+
+		XmlAssert.assertThat(result.toString()).and(expected).ignoreWhitespace().areSimilar();
 
 		soapMessage.writeTo(new ByteArrayOutputStream());
 	}
@@ -147,6 +159,5 @@ public abstract class AbstractSoapMessageTestCase extends AbstractMimeMessageTes
 
 	@Test
 	public abstract void testSetOtherDocument() throws Exception;
-
 
 }

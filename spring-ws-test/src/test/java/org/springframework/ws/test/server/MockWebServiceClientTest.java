@@ -16,33 +16,36 @@
 
 package org.springframework.ws.test.server;
 
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
 import org.springframework.ws.soap.server.SoapMessageDispatcher;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-
 public class MockWebServiceClientTest {
 
 	@Test
-	public void createServerApplicationContext() throws Exception {
+	public void createServerApplicationContext() {
+
 		StaticApplicationContext applicationContext = new StaticApplicationContext();
 		applicationContext.registerSingleton("messageDispatcher", SoapMessageDispatcher.class);
 		applicationContext.registerSingleton("messageFactory", SaajSoapMessageFactory.class);
 		applicationContext.refresh();
 
 		MockWebServiceClient client = MockWebServiceClient.createClient(applicationContext);
-		assertNotNull(client);
+
+		assertThat(client).isNotNull();
 	}
-	
+
 	@Test
-	public void createServerApplicationContextDefaults() throws Exception {
+	public void createServerApplicationContextDefaults() {
+
 		StaticApplicationContext applicationContext = new StaticApplicationContext();
 		applicationContext.refresh();
 
 		MockWebServiceClient client = MockWebServiceClient.createClient(applicationContext);
-		assertNotNull(client);
+
+		assertThat(client).isNotNull();
 	}
 }

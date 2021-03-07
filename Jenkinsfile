@@ -26,6 +26,7 @@ pipeline {
 				}
 			}
 		}
+
 		stage("Test: baseline (jdk8)") {
 			agent {
 				docker {
@@ -37,30 +38,9 @@ pipeline {
 				sh "PROFILE=distribute,convergence ci/test.sh"
 			}
 		}
+
 		stage("Test other configurations") {
 			parallel {
-				stage("Test: springnext (jdk8)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk8:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext,convergence ci/test.sh"
-					}
-				}
-				stage("Test: springnext-buildsnapshot (jdk8)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk8:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext-buildsnapshot,convergence ci/test.sh"
-					}
-				}
 				stage("Test: spring-buildsnapshot (jdk8)") {
 					agent {
 						docker {
@@ -83,28 +63,6 @@ pipeline {
 						sh "PROFILE=distribute,java11,convergence ci/test.sh"
 					}
 				}
-				stage("Test: springnext (jdk11)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk11:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext,java11,convergence ci/test.sh"
-					}
-				}
-				stage("Test: springnext-buildsnapshot (jdk11)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk11:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext-buildsnapshot,java11,convergence ci/test.sh"
-					}
-				}
 				stage("Test: spring-buildsnapshot (jdk11)") {
 					agent {
 						docker {
@@ -116,10 +74,10 @@ pipeline {
 						sh "PROFILE=spring-buildsnapshot,java11,convergence ci/test.sh"
 					}
 				}
-				stage("Test: baseline (jdk12)") {
+				stage("Test: baseline (jdk15)") {
 					agent {
 						docker {
-							image 'adoptopenjdk/openjdk12:latest'
+							image 'adoptopenjdk/openjdk15:latest'
 							args '-v $HOME/.m2:/root/.m2'
 						}
 					}
@@ -127,32 +85,10 @@ pipeline {
 						sh "PROFILE=distribute,java11,convergence ci/test.sh"
 					}
 				}
-				stage("Test: springnext (jdk12)") {
+				stage("Test: spring-buildsnapshot (jdk15)") {
 					agent {
 						docker {
-							image 'adoptopenjdk/openjdk12:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext,java11,convergence ci/test.sh"
-					}
-				}
-				stage("Test: springnext-buildsnapshot (jdk12)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk12:latest'
-							args '-v $HOME/.m2:/root/.m2'
-						}
-					}
-					steps {
-						sh "PROFILE=springnext-buildsnapshot,java11,convergence ci/test.sh"
-					}
-				}
-				stage("Test: spring-buildsnapshot (jdk12)") {
-					agent {
-						docker {
-							image 'adoptopenjdk/openjdk12:latest'
+							image 'adoptopenjdk/openjdk15:latest'
 							args '-v $HOME/.m2:/root/.m2'
 						}
 					}
@@ -162,13 +98,68 @@ pipeline {
 				}
 			}
 		}
-		stage('Deploy to Artifactory') {
+
+		stage('Deploy') {
+			agent {
+				docker {
+					image 'springci/spring-ws-openjdk8-with-jq:latest'
+					args '-v $HOME/.m2:/tmp/jenkins-home/.m2'
+				}
+			}
+			options { timeout(time: 20, unit: 'MINUTES') }
+
+			environment {
+				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+				SONATYPE = credentials('oss-login')
+				KEYRING = credentials('spring-signing-secring.gpg')
+				PASSPHRASE = credentials('spring-gpg-passphrase')
+			}
+
+			steps {
+				script {
+					PROJECT_VERSION = sh(
+							script: "ci/version.sh",
+							returnStdout: true
+					).trim()
+
+					if (PROJECT_VERSION.matches(/.*-RC[0-9]+$/) || PROJECT_VERSION.matches(/.*-M[0-9]+$/)) {
+						RELEASE_TYPE = "milestone"
+					} else if (PROJECT_VERSION.endsWith('SNAPSHOT')) {
+						RELEASE_TYPE = 'snapshot'
+					} else if (PROJECT_VERSION.matches(/.*\.[0-9]+$/)) {
+						RELEASE_TYPE = 'release'
+					} else {
+						RELEASE_TYPE = 'snapshot'
+					}
+
+					if (RELEASE_TYPE == 'release') {
+						sh "PROFILE=distribute,central USERNAME=${SONATYPE_USR} PASSWORD=${SONATYPE_PSW} ci/build-and-deploy-to-maven-central.sh ${PROJECT_VERSION}"
+
+						slackSend(
+                                color: (currentBuild.currentResult == 'SUCCESS') ? 'good' : 'danger',
+                                channel: '#spring-ws',
+                                message: "@here Spring WS ${PROJECT_VERSION} is staged on Sonatype awaiting closure and release.")
+					} else {
+						sh "PROFILE=distribute,${RELEASE_TYPE} ci/build-and-deploy-to-artifactory.sh"
+					}
+				}
+			}
+		}
+
+		stage('Release documentation') {
+			when {
+				anyOf {
+					branch 'master'
+					branch 'release'
+				}
+			}
 			agent {
 				docker {
 					image 'adoptopenjdk/openjdk8:latest'
-					args '-v $HOME/.m2:/root/.m2'
+					args '-v $HOME/.m2:/tmp/jenkins-home/.m2'
 				}
 			}
+			options { timeout(time: 20, unit: 'MINUTES') }
 
 			environment {
 				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
@@ -176,106 +167,12 @@ pipeline {
 
 			steps {
 				script {
-					// Warm up this plugin quietly before using it.
-					sh "./mvnw -q org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version"
-
-					PROJECT_VERSION = sh(
-							script: "./mvnw org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -o | grep -v INFO",
-							returnStdout: true
-					).trim()
-
-					RELEASE_TYPE = 'milestone' // .RC? or .M?
-
-					if (PROJECT_VERSION.endsWith('BUILD-SNAPSHOT')) {
-						RELEASE_TYPE = 'snapshot'
-					} else if (PROJECT_VERSION.endsWith('RELEASE')) {
-						RELEASE_TYPE = 'release'
-					}
-
-					OUTPUT = sh(
-							script: "PROFILE=distribute,docs,${RELEASE_TYPE} ci/build.sh",
-							returnStdout: true
-					).trim()
-
-					echo "$OUTPUT"
-
-					build_info_path = OUTPUT.split('\n')
-							.find { it.contains('Artifactory Build Info Recorder') }
-							.split('Saving Build Info to ')[1]
-							.trim()[1..-2]
-
-					dir(build_info_path + '/..') {
-						stash name: 'build_info', includes: "*.json"
-					}
-				}
-			}
-		}
-		stage('Promote to Bintray') {
-			when {
-				branch 'release'
-			}
-			agent {
-				docker {
-					image 'springci/spring-ws-openjdk8-with-jq:latest'
-					args '-v $HOME/.m2:/root/.m2'
-				}
-			}
-
-			environment {
-				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-			}
-
-			steps {
-				script {
-					// Warm up this plugin quietly before using it.
-					sh "./mvnw -q org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version"
-
-					PROJECT_VERSION = sh(
-							script: "./mvnw org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -o | grep -v INFO",
-							returnStdout: true
-					).trim()
-
-					if (PROJECT_VERSION.endsWith('RELEASE')) {
-						unstash name: 'build_info'
-						sh "ci/promote-to-bintray.sh"
-					} else {
-						echo "${PROJECT_VERSION} is not a candidate for promotion to Bintray."
-					}
-				}
-			}
-		}
-		stage('Sync to Maven Central') {
-			when {
-				branch 'release'
-			}
-			agent {
-				docker {
-					image 'springci/spring-ws-openjdk8-with-jq:latest'
-					args '-v $HOME/.m2:/root/.m2'
-				}
-			}
-
-			environment {
-				BINTRAY = credentials('Bintray-spring-operator')
-				SONATYPE = credentials('oss-token')
-			}
-
-			steps {
-				script {
-					// Warm up this plugin quietly before using it.
-					sh "./mvnw -q org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version"
-
-					PROJECT_VERSION = sh(
-							script: "./mvnw org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -o | grep -v INFO",
-							returnStdout: true
-					).trim()
-
-					if (PROJECT_VERSION.endsWith('RELEASE')) {
-						unstash name: 'build_info'
-						sh "ci/sync-to-maven-central.sh"
-					} else {
-						echo "${PROJECT_VERSION} is not a candidate for syncing to Maven Central."
-					}
+					sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pdistribute,docs ' +
+							'-Dartifactory.server=https://repo.spring.io ' +
+							"-Dartifactory.username=${ARTIFACTORY_USR} " +
+							"-Dartifactory.password=${ARTIFACTORY_PSW} " +
+							"-Dartifactory.distribution-repository=temp-private-local " +
+							'-Dmaven.test.skip=true -Dmaven.deploy.skip=true deploy -B'
 				}
 			}
 		}

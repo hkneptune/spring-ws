@@ -18,7 +18,6 @@ package org.springframework.ws.soap.security.xwss.callback.jaas;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +41,7 @@ public class PlainTextLoginModule implements LoginModule {
 
 	@Override
 	public boolean abort() {
+
 		success = false;
 		logout();
 		return true;
@@ -49,6 +49,7 @@ public class PlainTextLoginModule implements LoginModule {
 
 	@Override
 	public boolean commit() throws LoginException {
+
 		if (success) {
 			if (subject.isReadOnly()) {
 				throw new LoginException("Subject is read-only");
@@ -57,35 +58,34 @@ public class PlainTextLoginModule implements LoginModule {
 				subject.getPrincipals().addAll(principals);
 				principals.clear();
 				return true;
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				throw new LoginException(e.getMessage());
 			}
-		}
-		else {
+		} else {
 			principals.clear();
 		}
 		return true;
 	}
 
 	@Override
-	public void initialize(Subject subject,
-						   CallbackHandler callbackHandler,
-						   Map<String,?> sharedState,
-						   Map<String,?> options) {
+	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState,
+			Map<String, ?> options) {
+
 		this.subject = subject;
 		this.callbackHandler = callbackHandler;
 	}
 
 	@Override
 	public boolean login() throws LoginException {
+
 		if (callbackHandler == null) {
 			return false;
 		}
+
 		try {
 			NameCallback nameCallback = new NameCallback("Username: ");
 			PasswordCallback passwordCallback = new PasswordCallback("Password: ", false);
-			Callback[] callbacks = new Callback[]{nameCallback, passwordCallback};
+			Callback[] callbacks = new Callback[] { nameCallback, passwordCallback };
 
 			callbackHandler.handle(callbacks);
 
@@ -104,38 +104,33 @@ public class PlainTextLoginModule implements LoginModule {
 			}
 
 			return true;
-		}
-		catch (LoginException ex) {
+		} catch (LoginException ex) {
 			throw ex;
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			success = false;
 			throw new LoginException(ex.getMessage());
 		}
 	}
 
 	private boolean validate(String username, String password) {
+
 		if ("Bert".equals(username) && "Ernie".equals(password)) {
 			this.principals.add(new SimplePrincipal(username));
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
 
 	@Override
 	public boolean logout() {
+
 		principals.clear();
 
-		Iterator<SimplePrincipal> iterator = subject.getPrincipals(SimplePrincipal.class).iterator();
-		while (iterator.hasNext()) {
-			SimplePrincipal principal = iterator.next();
+		for (SimplePrincipal principal : subject.getPrincipals(SimplePrincipal.class)) {
 			subject.getPrincipals().remove(principal);
 		}
 
 		return true;
 	}
-
-
 }

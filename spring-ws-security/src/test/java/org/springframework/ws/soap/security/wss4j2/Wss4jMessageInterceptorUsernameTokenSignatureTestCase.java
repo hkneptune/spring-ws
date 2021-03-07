@@ -16,16 +16,16 @@
 
 package org.springframework.ws.soap.security.wss4j2;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.soap.SoapMessage;
-
-import org.junit.Test;
 import org.w3c.dom.Document;
 
 public abstract class Wss4jMessageInterceptorUsernameTokenSignatureTestCase extends Wss4jTestCase {
 
 	@Test
 	public void testAddUsernameTokenSignature() throws Exception {
+
 		Wss4jSecurityInterceptor interceptor = new Wss4jSecurityInterceptor();
 		interceptor.setSecurementActions("UsernameToken");
 		interceptor.setSecurementUsername("Bert");
@@ -36,6 +36,7 @@ public abstract class Wss4jMessageInterceptorUsernameTokenSignatureTestCase exte
 		interceptor.secureMessage(message, context);
 
 		Document doc = getDocument(message);
+
 		assertXpathEvaluatesTo("Invalid Username", "Bert",
 				"/SOAP-ENV:Envelope/SOAP-ENV:Header/wsse:Security/wsse:UsernameToken/wsse:Username/text()", doc);
 		assertXpathExists("Invalid Password",

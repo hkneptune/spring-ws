@@ -16,18 +16,16 @@
 
 package org.springframework.ws.soap.server.endpoint.interceptor;
 
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.context.DefaultMessageContext;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.server.EndpointInterceptor;
 import org.springframework.ws.server.endpoint.interceptor.EndpointInterceptorAdapter;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class SoapActionSmartEndpointInterceptorTest {
 
@@ -37,8 +35,9 @@ public class SoapActionSmartEndpointInterceptorTest {
 
 	private MessageContext messageContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
+
 		delegate = new EndpointInterceptorAdapter();
 
 		soapAction = "http://springframework.org/spring-ws";
@@ -50,27 +49,29 @@ public class SoapActionSmartEndpointInterceptorTest {
 		messageContext = new DefaultMessageContext(request, messageFactory);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void neitherNamespaceNorLocalPart() {
-		new SoapActionSmartEndpointInterceptor(delegate, null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SoapActionSmartEndpointInterceptor(delegate, null));
 	}
 
 	@Test
-	public void shouldInterceptMatch() throws Exception {
+	public void shouldInterceptMatch() {
+
 		SoapActionSmartEndpointInterceptor interceptor = new SoapActionSmartEndpointInterceptor(delegate, soapAction);
 
 		boolean result = interceptor.shouldIntercept(messageContext, null);
-		assertTrue("Interceptor should apply", result);
+
+		assertThat(result).isTrue();
 	}
 
 	@Test
-	public void shouldInterceptNonMatch() throws Exception {
-		SoapActionSmartEndpointInterceptor interceptor =
-				new SoapActionSmartEndpointInterceptor(delegate, "http://springframework.org/other");
+	public void shouldInterceptNonMatch() {
+
+		SoapActionSmartEndpointInterceptor interceptor = new SoapActionSmartEndpointInterceptor(delegate,
+				"http://springframework.org/other");
 
 		boolean result = interceptor.shouldIntercept(messageContext, null);
-		assertFalse("Interceptor should apply", result);
+
+		assertThat(result).isFalse();
 	}
-
-
 }

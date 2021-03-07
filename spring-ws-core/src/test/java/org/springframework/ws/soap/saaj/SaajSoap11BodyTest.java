@@ -16,31 +16,33 @@
 
 package org.springframework.ws.soap.saaj;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.Locale;
+
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPBody;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPMessage;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.soap.SoapBody;
 import org.springframework.ws.soap.soap11.AbstractSoap11BodyTestCase;
-
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class SaajSoap11BodyTest extends AbstractSoap11BodyTestCase {
 
 	@Override
 	protected SoapBody createSoapBody() throws Exception {
+
 		MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_1_PROTOCOL);
 		SOAPMessage saajMessage = messageFactory.createMessage();
+
 		return new SaajSoap11Body(saajMessage.getSOAPPart().getEnvelope().getBody(), true);
 	}
 
 	@Test
 	public void testLangAttributeOnSoap11FaultString() throws Exception {
+
 		MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_1_PROTOCOL);
 		SOAPMessage saajMessage = messageFactory.createMessage();
 
@@ -48,14 +50,14 @@ public class SaajSoap11BodyTest extends AbstractSoap11BodyTestCase {
 		SaajSoap11Body soapBody = new SaajSoap11Body(saajSoapBody, true);
 
 		soapBody.addClientOrSenderFault("Foo", Locale.ENGLISH);
-		assertNotNull("No Language set", saajSoapBody.getFault().getFaultStringLocale());
+
+		assertThat(saajSoapBody.getFault().getFaultStringLocale()).isNotNull();
 
 		saajSoapBody = saajMessage.getSOAPPart().getEnvelope().getBody();
 		soapBody = new SaajSoap11Body(saajSoapBody, false);
 
 		soapBody.addClientOrSenderFault("Foo", Locale.ENGLISH);
-		assertNull("Language set", saajSoapBody.getFault().getFaultStringLocale());
+
+		assertThat(saajSoapBody.getFault().getFaultStringLocale()).isNull();
 	}
-
-
 }

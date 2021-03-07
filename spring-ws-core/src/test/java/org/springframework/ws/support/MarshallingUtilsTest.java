@@ -16,9 +16,13 @@
 
 package org.springframework.ws.support;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.oxm.mime.MimeContainer;
@@ -29,15 +33,11 @@ import org.springframework.ws.mime.MimeMessage;
 import org.springframework.xml.transform.StringResult;
 import org.springframework.xml.transform.StringSource;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
-
 public class MarshallingUtilsTest {
 
 	@Test
 	public void testUnmarshal() throws Exception {
+
 		Unmarshaller unmarshallerMock = createMock(Unmarshaller.class);
 		WebServiceMessage messageMock = createMock(WebServiceMessage.class);
 
@@ -49,13 +49,15 @@ public class MarshallingUtilsTest {
 		replay(unmarshallerMock, messageMock);
 
 		Object result = MarshallingUtils.unmarshal(unmarshallerMock, messageMock);
-		Assert.assertEquals("Invalid unmarshalled object", unmarshalled, result);
+
+		assertThat(result).isEqualTo(unmarshalled);
 
 		verify(unmarshallerMock, messageMock);
 	}
 
 	@Test
 	public void testUnmarshalMime() throws Exception {
+
 		MimeUnmarshaller unmarshallerMock = createMock(MimeUnmarshaller.class);
 		MimeMessage messageMock = createMock(MimeMessage.class);
 
@@ -67,13 +69,15 @@ public class MarshallingUtilsTest {
 		replay(unmarshallerMock, messageMock);
 
 		Object result = MarshallingUtils.unmarshal(unmarshallerMock, messageMock);
-		Assert.assertEquals("Invalid unmarshalled object", unmarshalled, result);
+
+		assertThat(result).isEqualTo(unmarshalled);
 
 		verify(unmarshallerMock, messageMock);
 	}
 
 	@Test
 	public void testUnmarshalNoPayload() throws Exception {
+
 		Unmarshaller unmarshallerMock = createMock(Unmarshaller.class);
 		MimeMessage messageMock = createMock(MimeMessage.class);
 
@@ -82,13 +86,15 @@ public class MarshallingUtilsTest {
 		replay(unmarshallerMock, messageMock);
 
 		Object result = MarshallingUtils.unmarshal(unmarshallerMock, messageMock);
-		Assert.assertNull("Invalid unmarshalled object", result);
+
+		assertThat(result).isNull();
 
 		verify(unmarshallerMock, messageMock);
 	}
 
 	@Test
 	public void testMarshal() throws Exception {
+
 		Marshaller marshallerMock = createMock(Marshaller.class);
 		WebServiceMessage messageMock = createMock(WebServiceMessage.class);
 
@@ -106,6 +112,7 @@ public class MarshallingUtilsTest {
 
 	@Test
 	public void testMarshalMime() throws Exception {
+
 		MimeMarshaller marshallerMock = createMock(MimeMarshaller.class);
 		MimeMessage messageMock = createMock(MimeMessage.class);
 
@@ -120,6 +127,4 @@ public class MarshallingUtilsTest {
 
 		verify(marshallerMock, messageMock);
 	}
-
-
 }

@@ -48,19 +48,21 @@ public abstract class FreePortScanner {
 	 * Returns the number of a free port in the given range.
 	 */
 	public static int getFreePort(int minPort, int maxPort) {
+
 		Assert.isTrue(minPort > 0, "'minPort' must be larger than 0");
 		Assert.isTrue(maxPort > minPort, "'maxPort' must be larger than minPort");
+
 		int portRange = maxPort - minPort;
 		int candidatePort;
 		int searchCounter = 0;
+
 		do {
 			if (++searchCounter > portRange) {
 				throw new IllegalStateException(
 						String.format("There were no ports available in the range %d to %d", minPort, maxPort));
 			}
 			candidatePort = getRandomPort(minPort, portRange);
-		}
-		while (!isPortAvailable(candidatePort));
+		} while (!isPortAvailable(candidatePort));
 
 		return candidatePort;
 	}
@@ -70,11 +72,12 @@ public abstract class FreePortScanner {
 	}
 
 	private static boolean isPortAvailable(int port) {
+
 		ServerSocket serverSocket;
+
 		try {
 			serverSocket = new ServerSocket();
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			throw new IllegalStateException("Unable to create ServerSocket.", ex);
 		}
 
@@ -82,18 +85,14 @@ public abstract class FreePortScanner {
 			InetSocketAddress sa = new InetSocketAddress(port);
 			serverSocket.bind(sa);
 			return true;
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			return false;
-		}
-		finally {
+		} finally {
 			try {
 				serverSocket.close();
-			}
-			catch (IOException ex) {
+			} catch (IOException ex) {
 				// ignore
 			}
 		}
 	}
-
 }

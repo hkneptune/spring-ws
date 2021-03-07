@@ -17,13 +17,12 @@
 package org.springframework.ws.soap.security.wss4j2;
 
 import org.apache.wss4j.common.crypto.Merlin;
-import org.junit.Test;
-import org.w3c.dom.Document;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
+import org.w3c.dom.Document;
 
 public abstract class Wss4jMessageInterceptorX509TestCase extends Wss4jTestCase {
 
@@ -31,6 +30,7 @@ public abstract class Wss4jMessageInterceptorX509TestCase extends Wss4jTestCase 
 
 	@Override
 	protected void onSetup() throws Exception {
+
 		interceptor = new Wss4jSecurityInterceptor();
 		interceptor.setSecurementActions("Signature");
 		interceptor.setValidationActions("Signature");
@@ -41,12 +41,9 @@ public abstract class Wss4jMessageInterceptorX509TestCase extends Wss4jTestCase 
 		cryptoFactoryBean.setKeyStoreLocation(new ClassPathResource("private.jks"));
 
 		cryptoFactoryBean.afterPropertiesSet();
-		interceptor.setSecurementSignatureCrypto(cryptoFactoryBean
-				.getObject());
-		interceptor.setValidationSignatureCrypto(cryptoFactoryBean
-				.getObject());
+		interceptor.setSecurementSignatureCrypto(cryptoFactoryBean.getObject());
+		interceptor.setValidationSignatureCrypto(cryptoFactoryBean.getObject());
 		interceptor.afterPropertiesSet();
-
 	}
 
 	@Test
@@ -68,5 +65,4 @@ public abstract class Wss4jMessageInterceptorX509TestCase extends Wss4jTestCase 
 		// lets verify the signature that we've just generated
 		interceptor.validateMessage(message, messageContext);
 	}
-
 }

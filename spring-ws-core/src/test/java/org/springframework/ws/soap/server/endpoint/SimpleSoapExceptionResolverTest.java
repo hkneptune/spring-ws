@@ -16,20 +16,19 @@
 
 package org.springframework.ws.soap.server.endpoint;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.util.Locale;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.MockWebServiceMessage;
 import org.springframework.ws.WebServiceMessageFactory;
 import org.springframework.ws.context.DefaultMessageContext;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.soap11.Soap11Body;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
 
 public class SimpleSoapExceptionResolverTest {
 
@@ -43,8 +42,9 @@ public class SimpleSoapExceptionResolverTest {
 
 	private WebServiceMessageFactory factoryMock;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		exceptionResolver = new SimpleSoapExceptionResolver();
 		factoryMock = createMock(WebServiceMessageFactory.class);
 		messageContext = new DefaultMessageContext(new MockWebServiceMessage(), factoryMock);
@@ -53,7 +53,8 @@ public class SimpleSoapExceptionResolverTest {
 	}
 
 	@Test
-	public void testResolveExceptionInternal() throws Exception {
+	public void testResolveExceptionInternal() {
+
 		Exception exception = new Exception("message");
 		expect(factoryMock.createWebServiceMessage()).andReturn(messageMock);
 		expect(messageMock.getSoapBody()).andReturn(bodyMock);
@@ -62,7 +63,8 @@ public class SimpleSoapExceptionResolverTest {
 		replay(factoryMock, messageMock, bodyMock);
 
 		boolean result = exceptionResolver.resolveExceptionInternal(messageContext, null, exception);
-		Assert.assertTrue("Invalid result", result);
+
+		assertThat(result).isTrue();
 
 		verify(factoryMock, messageMock, bodyMock);
 	}

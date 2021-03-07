@@ -16,14 +16,13 @@
 
 package org.springframework.ws.soap.axiom;
 
-import org.apache.axiom.om.OMSourcedElement;
+import static org.assertj.core.api.Assertions.*;
 
+import org.apache.axiom.om.OMSourcedElement;
 import org.springframework.ws.soap.SoapBody;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.SoapVersion;
 import org.springframework.ws.soap.soap12.AbstractSoap12MessageTestCase;
-
-import static org.junit.Assert.*;
 
 public class AxiomSoap12NonCachingMessageTest extends AbstractSoap12MessageTestCase {
 
@@ -33,7 +32,8 @@ public class AxiomSoap12NonCachingMessageTest extends AbstractSoap12MessageTestC
 	}
 
 	@Override
-	protected SoapMessage createSoapMessage() throws Exception {
+	protected SoapMessage createSoapMessage() {
+
 		AxiomSoapMessageFactory messageFactory = new AxiomSoapMessageFactory();
 		messageFactory.setPayloadCaching(false);
 		messageFactory.setSoapVersion(SoapVersion.SOAP_12);
@@ -43,14 +43,17 @@ public class AxiomSoap12NonCachingMessageTest extends AbstractSoap12MessageTestC
 
 	@Override
 	public void testWriteToTransportOutputStream() throws Exception {
+
 		super.testWriteToTransportOutputStream();
 
 		SoapBody body = soapMessage.getSoapBody();
-		OMSourcedElement axiomPayloadEle =
-				(OMSourcedElement) ((AxiomSoapBody) body).getAxiomElement().getFirstElement();
-		assertFalse("Non-cached body should not be expanded now", axiomPayloadEle.isExpanded());
+		OMSourcedElement axiomPayloadEle = (OMSourcedElement) ((AxiomSoapBody) body).getAxiomElement().getFirstElement();
+
+		assertThat(axiomPayloadEle.isExpanded()).isFalse();
+
 		axiomPayloadEle.getFirstElement();
-		assertTrue("Non-cached body should now be expanded", axiomPayloadEle.isExpanded());
-		assertEquals("Invalid payload", "payload", axiomPayloadEle.getLocalName());
+
+		assertThat(axiomPayloadEle.isExpanded()).isTrue();
+		assertThat(axiomPayloadEle.getLocalName()).isEqualTo("payload");
 	}
 }

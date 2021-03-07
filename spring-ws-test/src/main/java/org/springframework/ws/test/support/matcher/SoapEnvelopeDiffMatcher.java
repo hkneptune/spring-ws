@@ -16,21 +16,20 @@
 
 package org.springframework.ws.test.support.matcher;
 
+import static org.springframework.ws.test.support.AssertionErrors.*;
+
 import java.io.IOException;
+
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMResult;
 
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.springframework.util.Assert;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.xml.transform.TransformerHelper;
-
-import org.custommonkey.xmlunit.Diff;
-import org.custommonkey.xmlunit.XMLUnit;
 import org.w3c.dom.Document;
-
-import static org.springframework.ws.test.support.AssertionErrors.assertTrue;
-import static org.springframework.ws.test.support.AssertionErrors.fail;
 
 /**
  * Matches {@link Source} SOAP envelopes.
@@ -39,7 +38,7 @@ import static org.springframework.ws.test.support.AssertionErrors.fail;
  * @since 2.1.1
  */
 public class SoapEnvelopeDiffMatcher extends AbstractSoapMessageMatcher {
-	
+
 	private final Source expected;
 
 	private final TransformerHelper transformerHelper = new TransformerHelper();
@@ -49,12 +48,14 @@ public class SoapEnvelopeDiffMatcher extends AbstractSoapMessageMatcher {
 	}
 
 	public SoapEnvelopeDiffMatcher(Source expected) {
+
 		Assert.notNull(expected, "'expected' must not be null");
 		this.expected = expected;
 	}
-	
+
 	@Override
 	protected void match(SoapMessage soapMessage) throws IOException, AssertionError {
+
 		Document actualDocument = soapMessage.getDocument();
 		Document expectedDocument = createDocumentFromSource(expected);
 		Diff diff = new Diff(expectedDocument, actualDocument);
@@ -62,12 +63,12 @@ public class SoapEnvelopeDiffMatcher extends AbstractSoapMessageMatcher {
 	}
 
 	private Document createDocumentFromSource(Source source) {
+
 		try {
 			DOMResult result = new DOMResult();
 			transformerHelper.transform(source, result);
 			return (Document) result.getNode();
-		}
-		catch (TransformerException ex) {
+		} catch (TransformerException ex) {
 			fail("Could not transform source to DOMResult" + ex.getMessage());
 			return null;
 		}

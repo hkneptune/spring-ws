@@ -16,13 +16,13 @@
 
 package org.springframework.ws.server.endpoint;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.Collections;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.context.MessageContext;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Test for AbstractEndpointExceptionResolver
@@ -36,8 +36,9 @@ public class EndpointExceptionResolverTest {
 
 	private AbstractEndpointExceptionResolver exceptionResolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		exceptionResolver = new AbstractEndpointExceptionResolver() {
 
 			@Override
@@ -52,10 +53,11 @@ public class EndpointExceptionResolverTest {
 
 	@Test
 	public void testMatchMethodEndpoint() {
+
 		boolean matched = exceptionResolver.resolveException(null, methodEndpoint, null);
-		Assert.assertTrue("AbstractEndpointExceptionResolver did not match mapped MethodEndpoint", matched);
+
+		assertThat(matched).isTrue();
 	}
 
-	public void emptyMethod() {
-	}
+	public void emptyMethod() {}
 }

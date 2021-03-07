@@ -16,6 +16,8 @@
 
 package org.springframework.ws.wsdl.wsdl11.provider;
 
+import static org.assertj.core.api.Assertions.*;
+
 import javax.wsdl.Definition;
 import javax.wsdl.Message;
 import javax.wsdl.Part;
@@ -26,15 +28,13 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.w3c.dom.Document;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.xml.sax.SaxUtils;
 import org.springframework.xml.DocumentBuilderFactoryUtils;
+import org.springframework.xml.sax.SaxUtils;
+import org.w3c.dom.Document;
 
 public class SuffixBasedMessagesProviderTest {
 
@@ -44,8 +44,9 @@ public class SuffixBasedMessagesProviderTest {
 
 	private DocumentBuilder documentBuilder;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		provider = new SuffixBasedMessagesProvider();
 		provider.setFaultSuffix("Foo");
 		WSDLFactory factory = WSDLFactory.newInstance();
@@ -57,6 +58,7 @@ public class SuffixBasedMessagesProviderTest {
 
 	@Test
 	public void testAddMessages() throws Exception {
+
 		String definitionNamespace = "http://springframework.org/spring-ws";
 		definition.addNamespace("tns", definitionNamespace);
 		definition.setTargetNamespace(definitionNamespace);
@@ -67,27 +69,31 @@ public class SuffixBasedMessagesProviderTest {
 		Document schemaDocument = documentBuilder.parse(SaxUtils.createInputSource(resource));
 		Types types = definition.createTypes();
 		definition.setTypes(types);
-		Schema schema = (Schema) definition.getExtensionRegistry()
-				.createExtension(Types.class, new QName("http://www.w3.org/2001/XMLSchema", "schema"));
+		Schema schema = (Schema) definition.getExtensionRegistry().createExtension(Types.class,
+				new QName("http://www.w3.org/2001/XMLSchema", "schema"));
 		types.addExtensibilityElement(schema);
 		schema.setElement(schemaDocument.getDocumentElement());
 
 		provider.addMessages(definition);
 
-		Assert.assertEquals("Invalid amount of messages created", 2, definition.getMessages().size());
+		assertThat(definition.getMessages()).hasSize(2);
 
 		Message message = definition.getMessage(new QName(definitionNamespace, "GetOrderRequest"));
-		Assert.assertNotNull("Message not created", message);
+
+		assertThat(message).isNotNull();
+
 		Part part = message.getPart("GetOrderRequest");
-		Assert.assertNotNull("Part not created", part);
-		Assert.assertEquals("Invalid element on part", new QName(schemaNamespace, "GetOrderRequest"),
-				part.getElementName());
+
+		assertThat(part).isNotNull();
+		assertThat(part.getElementName()).isEqualTo(new QName(schemaNamespace, "GetOrderRequest"));
 
 		message = definition.getMessage(new QName(definitionNamespace, "GetOrderResponse"));
-		Assert.assertNotNull("Message not created", message);
+
+		assertThat(message).isNotNull();
+
 		part = message.getPart("GetOrderResponse");
-		Assert.assertNotNull("Part not created", part);
-		Assert.assertEquals("Invalid element on part", new QName(schemaNamespace, "GetOrderResponse"),
-				part.getElementName());
+
+		assertThat(part).isNotNull();
+		assertThat(part.getElementName()).isEqualTo(new QName(schemaNamespace, "GetOrderResponse"));
 	}
 }

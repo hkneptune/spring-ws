@@ -18,14 +18,13 @@ package org.springframework.ws.soap.security.wss4j2;
 
 import java.util.Properties;
 
-import org.junit.Test;
-import org.w3c.dom.Document;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.context.DefaultMessageContext;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.security.wss4j2.callback.KeyStoreCallbackHandler;
 import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
+import org.w3c.dom.Document;
 
 public abstract class Wss4jMessageInterceptorEncryptionTestCase extends Wss4jTestCase {
 
@@ -33,6 +32,7 @@ public abstract class Wss4jMessageInterceptorEncryptionTestCase extends Wss4jTes
 
 	@Override
 	protected void onSetup() throws Exception {
+
 		interceptor = new Wss4jSecurityInterceptor();
 		interceptor.setValidationActions("Encrypt");
 		interceptor.setSecurementActions("Encrypt");
@@ -53,20 +53,20 @@ public abstract class Wss4jMessageInterceptorEncryptionTestCase extends Wss4jTes
 		cryptoFactoryBeanConfig.setProperty("org.apache.ws.security.crypto.merlin.file", "private.jks");
 		cryptoFactoryBean.setConfiguration(cryptoFactoryBeanConfig);
 		cryptoFactoryBean.afterPropertiesSet();
-		interceptor.setValidationDecryptionCrypto(cryptoFactoryBean
-				.getObject());
-		interceptor.setSecurementEncryptionCrypto(cryptoFactoryBean
-				.getObject());
+		interceptor.setValidationDecryptionCrypto(cryptoFactoryBean.getObject());
+		interceptor.setSecurementEncryptionCrypto(cryptoFactoryBean.getObject());
 
 		interceptor.afterPropertiesSet();
 	}
 
 	@Test
 	public void testDecryptRequest() throws Exception {
+
 		SoapMessage message = loadSoap11Message("encrypted-soap.xml");
 		MessageContext messageContext = new DefaultMessageContext(message, getSoap11MessageFactory());
 		interceptor.validateMessage(message, messageContext);
 		Document document = getDocument((SoapMessage) messageContext.getRequest());
+
 		assertXpathEvaluatesTo("Decryption error", "Hello", "/SOAP-ENV:Envelope/SOAP-ENV:Body/echo:echoRequest/text()",
 				document);
 		assertXpathNotExists("Security Header not removed", "/SOAP-ENV:Envelope/SOAP-ENV:Header/wsse:Security",
@@ -75,11 +75,13 @@ public abstract class Wss4jMessageInterceptorEncryptionTestCase extends Wss4jTes
 
 	@Test
 	public void testEncryptResponse() throws Exception {
+
 		SoapMessage message = loadSoap11Message("empty-soap.xml");
 		MessageContext messageContext = getSoap11MessageContext(message);
 		interceptor.setSecurementEncryptionUser("rsakey");
 		interceptor.secureMessage(message, messageContext);
 		Document document = getDocument(message);
+
 		assertXpathExists("Encryption error", "/SOAP-ENV:Envelope/SOAP-ENV:Header/wsse:Security/xenc:EncryptedKey",
 				document);
 	}

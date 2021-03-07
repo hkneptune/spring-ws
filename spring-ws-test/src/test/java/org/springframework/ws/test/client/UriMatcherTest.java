@@ -16,13 +16,13 @@
 
 package org.springframework.ws.test.client;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.net.URI;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.WebServiceMessage;
-
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
 
 public class UriMatcherTest {
 
@@ -30,19 +30,27 @@ public class UriMatcherTest {
 
 	@Test
 	public void match() {
+
 		WebServiceMessage message = createMock(WebServiceMessage.class);
+
 		expect(message.getPayloadSource()).andReturn(null);
+
 		replay(message);
+
 		UriMatcher matcher = new UriMatcher(GOOD_URI);
 		matcher.match(GOOD_URI, message);
 	}
 
-	@Test(expected = AssertionError.class)
+	@Test
 	public void nonMatch() {
-		WebServiceMessage message = createMock(WebServiceMessage.class);
-		expect(message.getPayloadSource()).andReturn(null);
-		replay(message);
-		UriMatcher matcher = new UriMatcher(GOOD_URI);
-		matcher.match(URI.create("http://www.example.org"), message);
+
+		assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> {
+
+			WebServiceMessage message = createMock(WebServiceMessage.class);
+			expect(message.getPayloadSource()).andReturn(null);
+			replay(message);
+			UriMatcher matcher = new UriMatcher(GOOD_URI);
+			matcher.match(URI.create("http://www.example.org"), message);
+		});
 	}
 }

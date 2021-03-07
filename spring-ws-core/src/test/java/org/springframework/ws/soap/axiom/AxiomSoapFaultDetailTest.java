@@ -16,46 +16,42 @@
 
 package org.springframework.ws.soap.axiom;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.io.StringReader;
 
-import org.springframework.ws.soap.SoapFault;
-import org.springframework.ws.soap.SoapFaultDetail;
 import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.axiom.soap.SOAPMessage;
 import org.apache.axiom.soap.SOAPModelBuilder;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ws.soap.SoapFault;
+import org.springframework.ws.soap.SoapFaultDetail;
 
 @SuppressWarnings("Since15")
 public class AxiomSoapFaultDetailTest {
 
-	private static final String FAILING_FAULT =
-			"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
-					"xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-					"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n	 " + "<soapenv:Body>\n	" +
-					"<soapenv:Fault>\n	" + "<faultcode>Client</faultcode>\n  " +
-					"<faultstring>Client Error</faultstring>\n	" + "<detail>\n " +
-					"<ns1:dispositionReport xmlns:ns1=\"urn:uddi-org:api_v3\">\n  " +
-					"<ns1:result errno=\"10210\"/>\n  " + "</ns1:dispositionReport>" + "</detail>" +
-					"</soapenv:Fault>" + "</soapenv:Body>" + "</soapenv:Envelope>";
+	private static final String FAILING_FAULT = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" "
+			+ "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" "
+			+ "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n	 " + "<soapenv:Body>\n	" + "<soapenv:Fault>\n	"
+			+ "<faultcode>Client</faultcode>\n  " + "<faultstring>Client Error</faultstring>\n	" + "<detail>\n "
+			+ "<ns1:dispositionReport xmlns:ns1=\"urn:uddi-org:api_v3\">\n  " + "<ns1:result errno=\"10210\"/>\n  "
+			+ "</ns1:dispositionReport>" + "</detail>" + "</soapenv:Fault>" + "</soapenv:Body>" + "</soapenv:Envelope>";
 
-	private static final String SUCCEEDING_FAULT =
-			"<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
-					"xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-					"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n	 " + "<soapenv:Body>\n	" +
-					"<soapenv:Fault>\n	" + "<faultcode>Client</faultcode>\n  " +
-					"<faultstring>Client Error</faultstring>\n	" + "<detail>" +
-					"<ns1:dispositionReport xmlns:ns1=\"urn:uddi-org:api_v3\">\n  " +
-					"<ns1:result errno=\"10210\"/>\n  " + "</ns1:dispositionReport>" + "</detail>" +
-					"</soapenv:Fault>" + "</soapenv:Body>" + "</soapenv:Envelope>";
+	private static final String SUCCEEDING_FAULT = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" "
+			+ "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" "
+			+ "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n	 " + "<soapenv:Body>\n	" + "<soapenv:Fault>\n	"
+			+ "<faultcode>Client</faultcode>\n  " + "<faultstring>Client Error</faultstring>\n	" + "<detail>"
+			+ "<ns1:dispositionReport xmlns:ns1=\"urn:uddi-org:api_v3\">\n  " + "<ns1:result errno=\"10210\"/>\n  "
+			+ "</ns1:dispositionReport>" + "</detail>" + "</soapenv:Fault>" + "</soapenv:Body>" + "</soapenv:Envelope>";
 
 	private AxiomSoapMessage failingMessage;
 
 	private AxiomSoapMessage succeedingMessage;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		SOAPModelBuilder builder = OMXMLBuilderFactory.createSOAPModelBuilder(new StringReader(FAILING_FAULT));
 		SOAPMessage soapMessage = builder.getSOAPMessage();
 
@@ -69,24 +65,32 @@ public class AxiomSoapFaultDetailTest {
 	}
 
 	@Test
-	public void testGetDetailEntriesWorksWithWhitespaceNodes() throws Exception {
-		SoapFault fault = failingMessage.getSoapBody().getFault();
-		Assert.assertNotNull("Fault is null", fault);
-		Assert.assertNotNull("Fault detail is null", fault.getFaultDetail());
-		SoapFaultDetail detail = fault.getFaultDetail();
-		Assert.assertTrue("No next detail entry present", detail.getDetailEntries().hasNext());
-		detail.getDetailEntries().next();
+	public void testGetDetailEntriesWorksWithWhitespaceNodes() {
 
+		SoapFault fault = failingMessage.getSoapBody().getFault();
+
+		assertThat(fault).isNotNull();
+		assertThat(fault.getFaultDetail()).isNotNull();
+
+		SoapFaultDetail detail = fault.getFaultDetail();
+
+		assertThat(detail.getDetailEntries().hasNext()).isTrue();
+
+		detail.getDetailEntries().next();
 	}
 
 	@Test
-	public void testGetDetailEntriesWorksWithoutWhitespaceNodes() throws Exception {
+	public void testGetDetailEntriesWorksWithoutWhitespaceNodes() {
+
 		SoapFault fault = succeedingMessage.getSoapBody().getFault();
-		Assert.assertNotNull("Fault is null", fault);
-		Assert.assertNotNull("Fault detail is null", fault.getFaultDetail());
+
+		assertThat(fault).isNotNull();
+		assertThat(fault.getFaultDetail()).isNotNull();
+
 		SoapFaultDetail detail = fault.getFaultDetail();
-		Assert.assertTrue("No next detail entry present", detail.getDetailEntries().hasNext());
+
+		assertThat(detail.getDetailEntries().hasNext()).isTrue();
+
 		detail.getDetailEntries().next();
 	}
-
 }

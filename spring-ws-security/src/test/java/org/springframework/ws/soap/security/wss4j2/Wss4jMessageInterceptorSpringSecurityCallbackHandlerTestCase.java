@@ -16,8 +16,14 @@
 
 package org.springframework.ws.soap.security.wss4j2;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.util.Properties;
 
+import org.apache.wss4j.dom.WSConstants;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -26,13 +32,6 @@ import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.server.EndpointInterceptor;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.security.wss4j2.callback.SpringSecurityPasswordValidationCallbackHandler;
-import org.apache.wss4j.dom.WSConstants;
-import org.junit.After;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public abstract class Wss4jMessageInterceptorSpringSecurityCallbackHandlerTestCase extends Wss4jTestCase {
 
@@ -41,19 +40,22 @@ public abstract class Wss4jMessageInterceptorSpringSecurityCallbackHandlerTestCa
 	private AuthenticationManager authenticationManager;
 
 	@Override
-	protected void onSetup() throws Exception {
+	protected void onSetup() {
+
 		authenticationManager = createMock(AuthenticationManager.class);
 		users.setProperty("Bert", "Ernie,ROLE_TEST");
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown() {
+
 		verify(authenticationManager);
 		SecurityContextHolder.clearContext();
 	}
 
 	@Test
 	public void testValidateUsernameTokenPlainText() throws Exception {
+
 		EndpointInterceptor interceptor = prepareInterceptor("UsernameToken", true, false);
 		SoapMessage message = loadSoap11Message("usernameTokenPlainText-soap.xml");
 		MessageContext messageContext = new DefaultMessageContext(message, getSoap11MessageFactory());
@@ -64,17 +66,18 @@ public abstract class Wss4jMessageInterceptorSpringSecurityCallbackHandlerTestCa
 		messageContext.getResponse();
 		interceptor.handleResponse(messageContext, null);
 		interceptor.afterCompletion(messageContext, null, null);
-		assertNull("Authentication created", SecurityContextHolder.getContext().getAuthentication());
+
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
 	}
 
 	@Test
 	public void testValidateUsernameTokenDigest() throws Exception {
+
 		Wss4jSecurityInterceptor interceptor = new Wss4jSecurityInterceptor();
 		interceptor.setSecurementActions("UsernameToken");
 		interceptor.setSecurementUsername("Bert");
 		interceptor.setSecurementPassword("Ernie");
 		interceptor.setSecurementPasswordType(WSConstants.PW_DIGEST);
-
 
 		SoapMessage message = loadSoap11Message("empty-soap.xml");
 		MessageContext messageContext = new DefaultMessageContext(message, getSoap11MessageFactory());
@@ -88,39 +91,45 @@ public abstract class Wss4jMessageInterceptorSpringSecurityCallbackHandlerTestCa
 		messageContext.getResponse();
 		interceptor.handleResponse(messageContext, null);
 		interceptor.afterCompletion(messageContext, null, null);
-		assertNull("Authentication created", SecurityContextHolder.getContext().getAuthentication());
+
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
 	}
 
-	protected void assertValidateUsernameToken(SoapMessage message) throws Exception {
+	protected void assertValidateUsernameToken(SoapMessage message) {
+
 		Object result = getMessage(message);
-		assertNotNull("No result returned", result);
+
+		assertThat(result).isNotNull();
 		assertXpathNotExists("Security Header not removed", "/SOAP-ENV:Envelope/SOAP-ENV:Header/wsse:Security",
 				getDocument(message));
-		assertNotNull("No Authentication created", SecurityContextHolder.getContext().getAuthentication());
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
 	}
 
 	protected Wss4jSecurityInterceptor prepareInterceptor(String actions, boolean validating, boolean digest)
 			throws Exception {
+
 		Wss4jSecurityInterceptor interceptor = new Wss4jSecurityInterceptor();
+
 		if (validating) {
 			interceptor.setValidationActions(actions);
-		}
-		else {
+		} else {
 			interceptor.setSecurementActions(actions);
 		}
-		SpringSecurityPasswordValidationCallbackHandler callbackHandler =
-				new SpringSecurityPasswordValidationCallbackHandler();
+
+		SpringSecurityPasswordValidationCallbackHandler callbackHandler = new SpringSecurityPasswordValidationCallbackHandler();
 		InMemoryUserDetailsManager userDetailsManager = new InMemoryUserDetailsManager(users);
 		callbackHandler.setUserDetailsService(userDetailsManager);
+
 		if (digest) {
 			interceptor.setSecurementPasswordType(WSConstants.PW_DIGEST);
-		}
-		else {
+		} else {
 			interceptor.setSecurementPasswordType(WSConstants.PW_TEXT);
 		}
+
 		interceptor.setValidationCallbackHandler(callbackHandler);
 		interceptor.afterPropertiesSet();
 		replay(authenticationManager);
+
 		return interceptor;
 	}
 }

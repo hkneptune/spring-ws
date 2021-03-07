@@ -16,8 +16,14 @@
 
 package org.springframework.ws.soap.security.xwss.callback;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.util.Collections;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,12 +34,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.ws.soap.security.callback.CleanupCallback;
 
 import com.sun.xml.wss.impl.callback.PasswordValidationCallback;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
 
 public class SpringDigestPasswordValidationCallbackHandlerTest {
 
@@ -46,9 +46,12 @@ public class SpringDigestPasswordValidationCallbackHandlerTest {
 	private String password;
 
 	private PasswordValidationCallback callback;
+	
+	@BeforeEach
+	public void setUp() {
+		// add clearContext() at the beginning of each method in case {@code SecurityContextHolder} isn't clean
+		SecurityContextHolder.clearContext();
 
-	@Before
-	public void setUp() throws Exception {
 		callbackHandler = new SpringDigestPasswordValidationCallbackHandler();
 		userDetailsService = createMock(UserDetailsService.class);
 		callbackHandler.setUserDetailsService(userDetailsService);
@@ -57,85 +60,89 @@ public class SpringDigestPasswordValidationCallbackHandlerTest {
 		String nonce = "9mdsYDCrjjYRur0rxzYt2oD7";
 		String passwordDigest = "kwNstEaiFOrI7B31j7GuETYvdgk=";
 		String creationTime = "2006-06-01T23:48:42Z";
-		PasswordValidationCallback.DigestPasswordRequest request =
-				new PasswordValidationCallback.DigestPasswordRequest(username, passwordDigest, nonce, creationTime);
+		PasswordValidationCallback.DigestPasswordRequest request = new PasswordValidationCallback.DigestPasswordRequest(
+				username, passwordDigest, nonce, creationTime);
 		callback = new PasswordValidationCallback(request);
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown() {
 		SecurityContextHolder.clearContext();
 	}
 
 	@Test
 	public void testAuthenticateUserDigestUserNotFound() throws Exception {
+
 		expect(userDetailsService.loadUserByUsername(username)).andThrow(new UsernameNotFoundException(username));
 
 		replay(userDetailsService);
 
 		callbackHandler.handleInternal(callback);
 		boolean authenticated = callback.getResult();
-		Assert.assertFalse("Authenticated", authenticated);
-		Assert.assertNull("Authentication created", SecurityContextHolder.getContext().getAuthentication());
+
+		assertThat(authenticated).isFalse();
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
 
 		verify(userDetailsService);
 	}
 
 	@Test
 	public void testAuthenticateUserDigestValid() throws Exception {
-		User user = new User(username, password, true, true, true, true, Collections.<GrantedAuthority>emptyList());
+
+		User user = new User(username, password, true, true, true, true, Collections.<GrantedAuthority> emptyList());
 		expect(userDetailsService.loadUserByUsername(username)).andReturn(user);
 
 		replay(userDetailsService);
 
 		callbackHandler.handleInternal(callback);
 		boolean authenticated = callback.getResult();
-		Assert.assertTrue("Not authenticated", authenticated);
-		Assert.assertNotNull("No Authentication created", SecurityContextHolder.getContext().getAuthentication());
+
+		assertThat(authenticated).isTrue();
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
 
 		verify(userDetailsService);
 	}
 
 	@Test
 	public void testAuthenticateUserDigestValidInvalid() throws Exception {
-		User user = new User(username, "Big bird", true, true, true, true, Collections.<GrantedAuthority>emptyList());
+
+		User user = new User(username, "Big bird", true, true, true, true, Collections.<GrantedAuthority> emptyList());
 		expect(userDetailsService.loadUserByUsername(username)).andReturn(user);
 
 		replay(userDetailsService);
 
 		callbackHandler.handleInternal(callback);
 		boolean authenticated = callback.getResult();
-		Assert.assertFalse("Authenticated", authenticated);
-		Assert.assertNull("Authentication created", SecurityContextHolder.getContext().getAuthentication());
+
+		assertThat(authenticated).isFalse();
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
 
 		verify(userDetailsService);
 	}
 
 	@Test
-	public void testAuthenticateUserDigestDisabled() throws Exception {
-		User user = new User(username, "Ernie", false, true, true, true, Collections.<GrantedAuthority>emptyList());
+	public void testAuthenticateUserDigestDisabled() {
+
+		User user = new User(username, "Ernie", false, true, true, true, Collections.<GrantedAuthority> emptyList());
 		expect(userDetailsService.loadUserByUsername(username)).andReturn(user);
 
 		replay(userDetailsService);
 
-		try {
-			callbackHandler.handleInternal(callback);
-			Assert.fail("disabled user authenticated");
-		} catch (DisabledException expected) {
-			// expected
-		}
+		assertThatExceptionOfType(DisabledException.class).isThrownBy(() -> callbackHandler.handleInternal(callback));
+
 		verify(userDetailsService);
 	}
 
 	@Test
 	public void testCleanUp() throws Exception {
-		TestingAuthenticationToken authentication =
-				new TestingAuthenticationToken(new Object(), new Object(), Collections.<GrantedAuthority>emptyList());
+
+		TestingAuthenticationToken authentication = new TestingAuthenticationToken(new Object(), new Object(),
+				Collections.<GrantedAuthority> emptyList());
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
 		CleanupCallback cleanupCallback = new CleanupCallback();
 		callbackHandler.handleInternal(cleanupCallback);
-		Assert.assertNull("Authentication created", SecurityContextHolder.getContext().getAuthentication());
-	}
 
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+	}
 }

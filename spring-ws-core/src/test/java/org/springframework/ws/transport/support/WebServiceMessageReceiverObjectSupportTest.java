@@ -16,12 +16,13 @@
 
 package org.springframework.ws.transport.support;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import javax.xml.namespace.QName;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.MockWebServiceMessage;
 import org.springframework.ws.MockWebServiceMessageFactory;
 import org.springframework.ws.WebServiceMessage;
@@ -29,8 +30,6 @@ import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.soap.SoapVersion;
 import org.springframework.ws.transport.FaultAwareWebServiceConnection;
 import org.springframework.ws.transport.WebServiceMessageReceiver;
-
-import static org.easymock.EasyMock.*;
 
 public class WebServiceMessageReceiverObjectSupportTest {
 
@@ -42,7 +41,7 @@ public class WebServiceMessageReceiverObjectSupportTest {
 
 	private MockWebServiceMessage request;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 
 		receiverSupport = new MyReceiverSupport();
@@ -56,6 +55,7 @@ public class WebServiceMessageReceiverObjectSupportTest {
 	public void handleConnectionResponse() throws Exception {
 
 		expect(connectionMock.receive(messageFactory)).andReturn(request);
+
 		connectionMock.setFaultCode(null);
 		connectionMock.send(isA(WebServiceMessage.class));
 		connectionMock.close();
@@ -66,7 +66,7 @@ public class WebServiceMessageReceiverObjectSupportTest {
 
 			@Override
 			public void receive(MessageContext messageContext) throws Exception {
-				Assert.assertNotNull("No message context", messageContext);
+				assertThat(messageContext).isNotNull();
 				messageContext.getResponse();
 			}
 		};
@@ -78,6 +78,7 @@ public class WebServiceMessageReceiverObjectSupportTest {
 
 	@Test
 	public void handleConnectionFaultResponse() throws Exception {
+
 		final QName faultCode = SoapVersion.SOAP_11.getClientOrSenderFaultName();
 
 		expect(connectionMock.receive(messageFactory)).andReturn(request);
@@ -91,9 +92,9 @@ public class WebServiceMessageReceiverObjectSupportTest {
 
 			@Override
 			public void receive(MessageContext messageContext) throws Exception {
-				Assert.assertNotNull("No message context", messageContext);
-				MockWebServiceMessage response =
-						(MockWebServiceMessage) messageContext.getResponse();
+
+				assertThat(messageContext).isNotNull();
+				MockWebServiceMessage response = (MockWebServiceMessage) messageContext.getResponse();
 				response.setFaultCode(faultCode);
 			}
 		};
@@ -114,7 +115,7 @@ public class WebServiceMessageReceiverObjectSupportTest {
 		WebServiceMessageReceiver receiver = new WebServiceMessageReceiver() {
 
 			public void receive(MessageContext messageContext) throws Exception {
-				Assert.assertNotNull("No message context", messageContext);
+				assertThat(messageContext).isNotNull();
 			}
 		};
 

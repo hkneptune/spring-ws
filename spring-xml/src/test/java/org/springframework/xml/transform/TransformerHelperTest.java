@@ -16,26 +16,28 @@
 
 package org.springframework.xml.transform;
 
+import static org.easymock.EasyMock.*;
+import static org.xmlunit.assertj.XmlAssert.*;
+
 import java.io.IOException;
+
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
-
-import static org.custommonkey.xmlunit.XMLAssert.*;
-import static org.easymock.EasyMock.*;
 
 public class TransformerHelperTest {
 
 	private TransformerHelper helper;
 	private Transformer transformer;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		helper = new TransformerHelper();
 		transformer = createMock(Transformer.class);
 	}
@@ -45,21 +47,15 @@ public class TransformerHelperTest {
 		doTest();
 	}
 
-//	@Ignore
-//	@Test
-//	public void customTransformerFactory() throws TransformerException, IOException, SAXException {
-//		helper.setTransformerFactoryClass(TransformerFactoryImpl.class);
-//		doTest();
-//	}
-
 	private void doTest() throws TransformerException, SAXException, IOException {
+
 		String xml = "<root xmlns='http://springframework.org/spring-ws'><child>text</child></root>";
 		Source source = new StringSource(xml);
 		Result result = new StringResult();
 
 		helper.transform(source, result);
 
-		assertXMLEqual(xml, result.toString());
+		assertThat(result.toString()).and(xml).ignoreWhitespace().areIdentical();
 	}
 
 }

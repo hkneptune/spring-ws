@@ -16,20 +16,20 @@
 
 package org.springframework.ws.server.endpoint.adapter;
 
+import static org.assertj.core.api.Assertions.*;
+
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.ws.MockWebServiceMessage;
 import org.springframework.ws.MockWebServiceMessageFactory;
 import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.context.DefaultMessageContext;
 import org.springframework.ws.context.MessageContext;
 import org.springframework.ws.server.endpoint.MethodEndpoint;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 public class PayloadMethodEndpointAdapterTest {
 
@@ -41,58 +41,74 @@ public class PayloadMethodEndpointAdapterTest {
 
 	private MessageContext messageContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
+
 		adapter = new PayloadMethodEndpointAdapter();
 		messageContext = new DefaultMessageContext(new MockWebServiceMessageFactory());
 	}
 
 	@Test
 	public void testSupportedNoResponse() throws NoSuchMethodException {
-		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "noResponse", new Class[]{DOMSource.class});
-		Assert.assertTrue("Method unsupported", adapter.supportsInternal(methodEndpoint));
+
+		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "noResponse", new Class[] { DOMSource.class });
+		assertThat(adapter.supportsInternal(methodEndpoint)).isTrue();
 	}
 
 	@Test
 	public void testSupportedResponse() throws NoSuchMethodException {
-		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "response", new Class[]{StreamSource.class});
-		Assert.assertTrue("Method unsupported", adapter.supportsInternal(methodEndpoint));
+
+		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "response", new Class[] { StreamSource.class });
+		assertThat(adapter.supportsInternal(methodEndpoint)).isTrue();
 	}
 
 	@Test
 	public void testUnsupportedMethodMultipleParams() throws NoSuchMethodException {
-		Assert.assertFalse("Method supported", adapter.supportsInternal(
-				new MethodEndpoint(this, "unsupportedMultipleParams", new Class[]{Source.class, Source.class})));
+
+		assertThat(adapter.supportsInternal(
+				new MethodEndpoint(this, "unsupportedMultipleParams", new Class[] { Source.class, Source.class }))).isFalse();
 	}
 
 	@Test
 	public void testUnsupportedMethodWrongReturnType() throws NoSuchMethodException {
-		Assert.assertFalse("Method supported", adapter.supportsInternal(
-				new MethodEndpoint(this, "unsupportedWrongReturnType", new Class[]{Source.class})));
+
+		assertThat(
+				adapter.supportsInternal(new MethodEndpoint(this, "unsupportedWrongReturnType", new Class[] { Source.class })))
+						.isFalse();
 	}
 
 	@Test
 	public void testUnsupportedMethodWrongParam() throws NoSuchMethodException {
-		Assert.assertFalse("Method supported",
-				adapter.supportsInternal(new MethodEndpoint(this, "unsupportedWrongParam", new Class[]{String.class})));
+
+		assertThat(
+				adapter.supportsInternal(new MethodEndpoint(this, "unsupportedWrongParam", new Class[] { String.class })))
+						.isFalse();
 	}
 
 	@Test
 	public void testNoResponse() throws Exception {
-		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "noResponse", new Class[]{DOMSource.class});
-		Assert.assertFalse("Method invoked", noResponseInvoked);
+
+		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "noResponse", new Class[] { DOMSource.class });
+
+		assertThat(noResponseInvoked).isFalse();
+
 		adapter.invoke(messageContext, methodEndpoint);
-		Assert.assertTrue("Method not invoked", noResponseInvoked);
+
+		assertThat(noResponseInvoked).isTrue();
 	}
 
 	@Test
 	public void testResponse() throws Exception {
+
 		WebServiceMessage request = new MockWebServiceMessage("<request/>");
 		messageContext = new DefaultMessageContext(request, new MockWebServiceMessageFactory());
-		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "response", new Class[]{StreamSource.class});
-		Assert.assertFalse("Method invoked", responseInvoked);
+		MethodEndpoint methodEndpoint = new MethodEndpoint(this, "response", new Class[] { StreamSource.class });
+
+		assertThat(responseInvoked).isFalse();
+
 		adapter.invoke(messageContext, methodEndpoint);
-		Assert.assertTrue("Method not invoked", responseInvoked);
+
+		assertThat(responseInvoked).isTrue();
 	}
 
 	public void noResponse(DOMSource request) {
@@ -100,12 +116,12 @@ public class PayloadMethodEndpointAdapterTest {
 	}
 
 	public Source response(StreamSource request) {
+
 		responseInvoked = true;
 		return request;
 	}
 
-	public void unsupportedMultipleParams(Source s1, Source s2) {
-	}
+	public void unsupportedMultipleParams(Source s1, Source s2) {}
 
 	public Source unsupportedWrongParam(String request) {
 		return null;

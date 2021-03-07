@@ -16,18 +16,18 @@
 
 package org.springframework.ws.soap.axiom;
 
-import java.io.StringWriter;
-import javax.xml.stream.XMLStreamWriter;
+import static org.xmlunit.assertj.XmlAssert.*;
 
-import org.springframework.util.xml.StaxUtils;
+import java.io.StringWriter;
+
+import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.soap.SOAPBody;
 import org.apache.axiom.soap.SOAPFactory;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.util.xml.StaxUtils;
 
 @SuppressWarnings("Since15")
 public class NonCachingPayloadTest {
@@ -36,8 +36,9 @@ public class NonCachingPayloadTest {
 
 	private SOAPBody body;
 
-	@Before
+	@BeforeEach
 	public final void setUp() {
+
 		SOAPFactory soapFactory = OMAbstractFactory.getSOAP11Factory();
 		body = soapFactory.createSOAPBody();
 		payload = new NonCachingPayload(body, soapFactory);
@@ -45,6 +46,7 @@ public class NonCachingPayloadTest {
 
 	@Test
 	public void testDelegatingStreamWriter() throws Exception {
+
 		XMLStreamWriter streamWriter = StaxUtils.getXMLStreamWriter(payload.getResult());
 
 		String namespace = "http://springframework.org/spring-ws";
@@ -60,14 +62,15 @@ public class NonCachingPayloadTest {
 		StringWriter writer = new StringWriter();
 		body.serialize(writer);
 
-		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>" +
-				"<root xmlns='http://springframework.org/spring-ws'>" + "<child>text</child>" + "</root></soapenv:Body>"
-				;
-		assertXMLEqual(expected, writer.toString());
+		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+				+ "<root xmlns='http://springframework.org/spring-ws'>" + "<child>text</child>" + "</root></soapenv:Body>";
+
+		assertThat(writer.toString()).and(expected).ignoreWhitespace().areIdentical();
 	}
 
 	@Test
 	public void testDelegatingStreamWriterWriteEndDocument() throws Exception {
+
 		XMLStreamWriter streamWriter = StaxUtils.getXMLStreamWriter(payload.getResult());
 
 		String namespace = "http://springframework.org/spring-ws";
@@ -82,10 +85,10 @@ public class NonCachingPayloadTest {
 		StringWriter writer = new StringWriter();
 		body.serialize(writer);
 
-		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>" +
-				"<root xmlns='http://springframework.org/spring-ws'>" + "<child>text</child>" + "</root></soapenv:Body>"
-				;
-		assertXMLEqual(expected, writer.toString());
+		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+				+ "<root xmlns='http://springframework.org/spring-ws'>" + "<child>text</child>" + "</root></soapenv:Body>";
+
+		assertThat(writer.toString()).and(expected).ignoreWhitespace().areIdentical();
 	}
 
 	@Test
@@ -103,8 +106,9 @@ public class NonCachingPayloadTest {
 		StringWriter writer = new StringWriter();
 		body.serialize(writer);
 
-		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>" +
-				"<root xmlns='http://springframework.org/spring-ws'>" + "<child />" + "</root></soapenv:Body>";
-		assertXMLEqual(expected, writer.toString());
+		String expected = "<soapenv:Body xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+				+ "<root xmlns='http://springframework.org/spring-ws'>" + "<child />" + "</root></soapenv:Body>";
+
+		assertThat(writer.toString()).and(expected).ignoreWhitespace().areIdentical();
 	}
 }

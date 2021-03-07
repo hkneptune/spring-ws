@@ -16,16 +16,14 @@
 
 package org.springframework.ws.server.endpoint.adapter.method.dom;
 
+import static org.assertj.core.api.Assertions.*;
+
+import org.jdom2.Element;
 import org.springframework.core.MethodParameter;
 import org.springframework.ws.server.endpoint.adapter.method.AbstractPayloadMethodProcessorTestCase;
 import org.springframework.ws.server.endpoint.adapter.method.AbstractPayloadSourceMethodProcessor;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
-
-import org.jdom2.Element;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class JDomPayloadMethodProcessorTest extends AbstractPayloadMethodProcessorTestCase {
 
@@ -36,20 +34,23 @@ public class JDomPayloadMethodProcessorTest extends AbstractPayloadMethodProcess
 
 	@Override
 	protected MethodParameter[] createSupportedParameters() throws NoSuchMethodException {
-		return new MethodParameter[]{new MethodParameter(getClass().getMethod("element", Element.class), 0)};
+		return new MethodParameter[] { new MethodParameter(getClass().getMethod("element", Element.class), 0) };
 	}
 
 	@Override
 	protected MethodParameter[] createSupportedReturnTypes() throws NoSuchMethodException {
-		return new MethodParameter[]{new MethodParameter(getClass().getMethod("element", Element.class), -1)};
+		return new MethodParameter[] { new MethodParameter(getClass().getMethod("element", Element.class), -1) };
 	}
 
 	@Override
 	protected void testArgument(Object argument, MethodParameter parameter) {
-		assertTrue("argument not a element", argument instanceof Element);
+
+		assertThat(argument).isInstanceOf(Element.class);
+
 		Element node = (Element) argument;
-		assertEquals("Invalid namespace", NAMESPACE_URI, node.getNamespaceURI());
-		assertEquals("Invalid local name", LOCAL_NAME, node.getName());
+
+		assertThat(node.getNamespaceURI()).isEqualTo(NAMESPACE_URI);
+		assertThat(node.getName()).isEqualTo(LOCAL_NAME);
 	}
 
 	@Override

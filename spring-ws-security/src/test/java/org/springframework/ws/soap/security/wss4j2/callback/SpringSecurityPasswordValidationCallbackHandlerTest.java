@@ -16,9 +16,16 @@
 
 package org.springframework.ws.soap.security.wss4j2.callback;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.easymock.EasyMock.*;
+
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.wss4j.common.ext.WSPasswordCallback;
+import org.apache.wss4j.common.principal.WSUsernameTokenPrincipalImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,13 +35,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.apache.wss4j.common.ext.WSPasswordCallback;
-import org.apache.wss4j.common.principal.WSUsernameTokenPrincipalImpl;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.easymock.EasyMock.*;
 
 /** @author tareq */
 public class SpringSecurityPasswordValidationCallbackHandlerTest {
@@ -44,13 +44,16 @@ public class SpringSecurityPasswordValidationCallbackHandlerTest {
 	private SimpleGrantedAuthority grantedAuthority;
 
 	private UsernameTokenPrincipalCallback callback;
-	
+
 	private WSPasswordCallback passwordCallback;
 
 	private UserDetails user;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
+		// add clearContext() at the beginning of each method in case {@code SecurityContextHolder} isn't clean
+		SecurityContextHolder.clearContext();
+		
 		callbackHandler = new SpringSecurityPasswordValidationCallbackHandler();
 
 		grantedAuthority = new SimpleGrantedAuthority("ROLE_1");
@@ -58,12 +61,13 @@ public class SpringSecurityPasswordValidationCallbackHandlerTest {
 
 		WSUsernameTokenPrincipalImpl principal = new WSUsernameTokenPrincipalImpl("Ernie", true);
 		callback = new UsernameTokenPrincipalCallback(principal);
-		
+
 		passwordCallback = new WSPasswordCallback("Ernie", null, "type", WSPasswordCallback.USERNAME_TOKEN);
 	}
-	
+
 	@Test
 	public void testHandleUsernameToken() throws Exception {
+
 		UserDetailsService userDetailsService = createMock(UserDetailsService.class);
 		callbackHandler.setUserDetailsService(userDetailsService);
 
@@ -72,28 +76,33 @@ public class SpringSecurityPasswordValidationCallbackHandlerTest {
 		replay(userDetailsService);
 
 		callbackHandler.handleUsernameToken(passwordCallback);
-		Assert.assertEquals("Bert", passwordCallback.getPassword());
+
+		assertThat(passwordCallback.getPassword()).isEqualTo("Bert");
 
 		verify(userDetailsService);
 	}
-	
+
 	@Test
 	public void testHandleUsernameTokenUserNotFound() throws Exception {
+
 		UserDetailsService userDetailsService = createMock(UserDetailsService.class);
 		callbackHandler.setUserDetailsService(userDetailsService);
 
-		expect(userDetailsService.loadUserByUsername("Ernie")).andThrow(new UsernameNotFoundException("User 'Ernie' not found"));
+		expect(userDetailsService.loadUserByUsername("Ernie"))
+				.andThrow(new UsernameNotFoundException("User 'Ernie' not found"));
 
 		replay(userDetailsService);
 
 		callbackHandler.handleUsernameToken(passwordCallback);
-		Assert.assertNull(passwordCallback.getPassword());
+
+		assertThat(passwordCallback.getPassword()).isNull();
 
 		verify(userDetailsService);
 	}
 
 	@Test
 	public void testHandleUsernameTokenPrincipal() throws Exception {
+
 		UserDetailsService userDetailsService = createMock(UserDetailsService.class);
 		callbackHandler.setUserDetailsService(userDetailsService);
 
@@ -103,13 +112,18 @@ public class SpringSecurityPasswordValidationCallbackHandlerTest {
 
 		callbackHandler.handleUsernameTokenPrincipal(callback);
 		SecurityContext context = SecurityContextHolder.getContext();
-		Assert.assertNotNull("SecurityContext must not be null", context);
+
+		assertThat(context).isNotNull();
+
 		Authentication authentication = context.getAuthentication();
-		Assert.assertNotNull("Authentication must not be null", authentication);
+
+		assertThat(authentication).isNotNull();
+
 		Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-		Assert.assertTrue("GrantedAuthority[] must not be null or empty",
-				(authorities != null && authorities.size() > 0));
-		Assert.assertEquals("Unexpected authority", grantedAuthority, authorities.iterator().next());
+
+		assertThat(authorities).isNotNull();
+		assertThat(authorities).isNotEmpty();
+		assertThat(authorities.iterator().next()).isEqualTo(grantedAuthority);
 
 		verify(userDetailsService);
 	}

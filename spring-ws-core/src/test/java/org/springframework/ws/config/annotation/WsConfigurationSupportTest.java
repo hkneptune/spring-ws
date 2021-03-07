@@ -1,11 +1,11 @@
 package org.springframework.ws.config.annotation;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.List;
 
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -22,10 +22,10 @@ public class WsConfigurationSupportTest {
 
 	private ApplicationContext applicationContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
-		AnnotationConfigApplicationContext applicationContext =
-				new AnnotationConfigApplicationContext();
+
+		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
 		applicationContext.register(TestConfig.class);
 		applicationContext.refresh();
 
@@ -34,24 +34,26 @@ public class WsConfigurationSupportTest {
 
 	@Test
 	public void interceptors() {
-		PayloadRootAnnotationMethodEndpointMapping endpointMapping = this.applicationContext.getBean(
-				PayloadRootAnnotationMethodEndpointMapping.class);
-		assertEquals(0, endpointMapping.getOrder());
+
+		PayloadRootAnnotationMethodEndpointMapping endpointMapping = this.applicationContext
+				.getBean(PayloadRootAnnotationMethodEndpointMapping.class);
+
+		assertThat(endpointMapping.getOrder()).isEqualTo(0);
 
 		EndpointInterceptor[] interceptors = endpointMapping.getInterceptors();
-		assertEquals(1, interceptors.length);
-		assertTrue(interceptors[0] instanceof MyInterceptor);
+
+		assertThat(interceptors).hasSize(1);
+		assertThat(interceptors[0]).isInstanceOf(MyInterceptor.class);
 	}
 
 	@Test
 	public void defaultMethodEndpointAdapter() {
-		DefaultMethodEndpointAdapter endpointAdapter =
-				this.applicationContext.getBean(DefaultMethodEndpointAdapter.class);
-		assertNotNull(endpointAdapter);
 
-		assertTrue(endpointAdapter instanceof MyDefaultMethodEndpointAdapter);
+		DefaultMethodEndpointAdapter endpointAdapter = this.applicationContext.getBean(DefaultMethodEndpointAdapter.class);
+
+		assertThat(endpointAdapter).isNotNull();
+		assertThat(endpointAdapter).isInstanceOf(MyDefaultMethodEndpointAdapter.class);
 	}
-
 
 	@Configuration
 	public static class TestConfig extends WsConfigurationSupport {
@@ -72,8 +74,7 @@ public class WsConfigurationSupportTest {
 
 	}
 
-	public static class MyDefaultMethodEndpointAdapter
-			extends DefaultMethodEndpointAdapter {
+	public static class MyDefaultMethodEndpointAdapter extends DefaultMethodEndpointAdapter {
 
 	}
 

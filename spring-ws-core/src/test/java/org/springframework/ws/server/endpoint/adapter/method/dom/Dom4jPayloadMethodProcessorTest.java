@@ -16,43 +16,43 @@
 
 package org.springframework.ws.server.endpoint.adapter.method.dom;
 
+import static org.assertj.core.api.Assertions.*;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 import org.springframework.core.MethodParameter;
 import org.springframework.ws.server.endpoint.adapter.method.AbstractPayloadMethodProcessorTestCase;
 import org.springframework.ws.server.endpoint.adapter.method.AbstractPayloadSourceMethodProcessor;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class Dom4jPayloadMethodProcessorTest extends AbstractPayloadMethodProcessorTestCase {
 
-   @Override
+	@Override
 	protected AbstractPayloadSourceMethodProcessor createProcessor() {
 		return new Dom4jPayloadMethodProcessor();
 	}
 
 	@Override
 	protected MethodParameter[] createSupportedParameters() throws NoSuchMethodException {
-		return new MethodParameter[]{
-				new MethodParameter(getClass().getMethod("element", Element.class), 0)};
+		return new MethodParameter[] { new MethodParameter(getClass().getMethod("element", Element.class), 0) };
 	}
 
 	@Override
 	protected MethodParameter[] createSupportedReturnTypes() throws NoSuchMethodException {
-		return new MethodParameter[]{new MethodParameter(getClass().getMethod("element", Element.class), -1)};
+		return new MethodParameter[] { new MethodParameter(getClass().getMethod("element", Element.class), -1) };
 	}
 
 	@Override
 	protected void testArgument(Object argument, MethodParameter parameter) {
-		assertTrue("argument not a element", argument instanceof Element);
+
+		assertThat(argument).isInstanceOf(Element.class);
+
 		Element element = (Element) argument;
-		assertEquals("Invalid namespace", NAMESPACE_URI, element.getNamespaceURI());
-		assertEquals("Invalid local name", LOCAL_NAME, element.getName());
+
+		assertThat(element.getNamespaceURI()).isEqualTo(NAMESPACE_URI);
+		assertThat(element.getName()).isEqualTo(LOCAL_NAME);
 	}
 
 	@Override

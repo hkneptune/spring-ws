@@ -16,38 +16,41 @@
 
 package org.springframework.ws.config;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.ws.server.endpoint.adapter.GenericMarshallingMethodEndpointAdapter;
 import org.springframework.ws.server.endpoint.adapter.XPathParamAnnotationMethodEndpointAdapter;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 public class WebServicesNamespaceHandlerTigerTest {
 
 	private ApplicationContext applicationContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
-		applicationContext =
-				new ClassPathXmlApplicationContext("webServicesNamespaceHandlerTest-tiger.xml", getClass());
+		applicationContext = new ClassPathXmlApplicationContext("webServicesNamespaceHandlerTest-tiger.xml", getClass());
 	}
 
 	@Test
-	public void testMarshallingEndpoints() throws Exception {
-		Map<String, GenericMarshallingMethodEndpointAdapter> result =
-				applicationContext.getBeansOfType(GenericMarshallingMethodEndpointAdapter.class);
-		Assert.assertFalse("no MarshallingMethodEndpointAdapter found", result.isEmpty());
+	public void testMarshallingEndpoints() {
+
+		Map<String, GenericMarshallingMethodEndpointAdapter> result = applicationContext
+				.getBeansOfType(GenericMarshallingMethodEndpointAdapter.class);
+
+		assertThat(result).isNotEmpty();
 	}
 
 	@Test
-	public void testXpathEndpoints() throws Exception {
-		Map<String, XPathParamAnnotationMethodEndpointAdapter> result =
-				applicationContext.getBeansOfType(XPathParamAnnotationMethodEndpointAdapter.class);
-		Assert.assertFalse("no XPathParamAnnotationMethodEndpointAdapter found", result.isEmpty());
+	public void testXpathEndpoints() {
+
+		Map<String, XPathParamAnnotationMethodEndpointAdapter> result = applicationContext
+				.getBeansOfType(XPathParamAnnotationMethodEndpointAdapter.class);
+
+		assertThat(result).isNotEmpty();
 	}
 }

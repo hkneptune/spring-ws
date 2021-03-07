@@ -1,8 +1,9 @@
 image:https://spring.io/badges/spring-ws/ga.svg["Spring Web Services", link="https://spring.io/projects/spring-ws#learn"]
 image:https://spring.io/badges/spring-ws/snapshot.svg["Spring Web Services", link="https://spring.io/projects/spring-ws#learn"]
 
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-ws%2Fmaster&subject=master[link=https://jenkins.spring.io/view/SpringWebServices/job/spring-ws/]
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-ws%2F2.x&subject=2.x[link=https://jenkins.spring.io/view/SpringWebServices/job/spring-ws/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-ws%2Fmaster&subject=3.1.x[link=https://jenkins.spring.io/view/SpringWebServices/job/spring-ws/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-ws%2F3.x&subject=3.0.x[link=https://jenkins.spring.io/view/SpringWebServices/job/spring-ws/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-ws%2F2.x&subject=2.4.x[link=https://jenkins.spring.io/view/SpringWebServices/job/spring-ws/]
 
 = Spring Web Services
 
@@ -100,7 +101,7 @@ See the current https://docs.spring.io/spring-ws/docs/current/api/[Javadoc] and 
 
 == Issue Tracking
 
-Spring Web Services uses https://jira.spring.io/browse/SWS[JIRA] for issue tracking purposes
+Spring Web Services uses https://github.com/spring-projects/spring-ws/issues[Github] for issue tracking purposes.
 
 == License
 

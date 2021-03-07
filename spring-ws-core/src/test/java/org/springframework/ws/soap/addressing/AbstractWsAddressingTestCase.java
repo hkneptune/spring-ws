@@ -16,55 +16,58 @@
 
 package org.springframework.ws.soap.addressing;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.io.IOException;
 import java.io.InputStream;
+
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.MimeHeaders;
 import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPException;
 
-import org.custommonkey.xmlunit.XMLUnit;
-import org.junit.Before;
-import org.w3c.dom.Document;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
-
-import static org.custommonkey.xmlunit.XMLUnit.compareXML;
-import static org.junit.Assert.*;
+import org.w3c.dom.Document;
+import org.xmlunit.assertj.XmlAssert;
 
 public abstract class AbstractWsAddressingTestCase {
 
 	protected MessageFactory messageFactory;
 
-	@Before
+	@BeforeEach
 	public void createMessageFactory() throws Exception {
 		messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
-		XMLUnit.setIgnoreWhitespace(true);
 	}
 
-
 	protected SaajSoapMessage loadSaajMessage(String fileName) throws SOAPException, IOException {
+
 		MimeHeaders mimeHeaders = new MimeHeaders();
 		mimeHeaders.addHeader("Content-Type", " application/soap+xml");
 		InputStream is = AbstractWsAddressingTestCase.class.getResourceAsStream(fileName);
-		assertNotNull("Could not load " + fileName, is);
+
+		assertThat(is).isNotNull();
+
 		try {
 			return new SaajSoapMessage(messageFactory.createMessage(mimeHeaders, is));
-		}
-		finally {
+		} finally {
 			is.close();
 		}
 	}
 
-	protected void assertXMLEqual(String message, SaajSoapMessage expected, SaajSoapMessage result) {
+	protected void assertXMLSimilar(SaajSoapMessage expected, SaajSoapMessage result) {
+
 		Document expectedDocument = expected.getSaajMessage().getSOAPPart();
 		Document resultDocument = result.getSaajMessage().getSOAPPart();
-		org.custommonkey.xmlunit.XMLAssert.assertXMLEqual(message, expectedDocument, resultDocument);
+
+		XmlAssert.assertThat(resultDocument).and(expectedDocument).ignoreWhitespace().areSimilar();
 	}
 
-	protected void assertXMLSimilar(String message, SaajSoapMessage expected, SaajSoapMessage result) {
+	protected void assertXMLNotSimilar(SaajSoapMessage expected, SaajSoapMessage result) {
+
 		Document expectedDocument = expected.getSaajMessage().getSOAPPart();
 		Document resultDocument = result.getSaajMessage().getSOAPPart();
-		org.custommonkey.xmlunit.XMLAssert.assertXMLEqual(compareXML(expectedDocument, resultDocument), false);
+
+		XmlAssert.assertThat(resultDocument).and(expectedDocument).ignoreWhitespace().areNotSimilar();
 	}
 }

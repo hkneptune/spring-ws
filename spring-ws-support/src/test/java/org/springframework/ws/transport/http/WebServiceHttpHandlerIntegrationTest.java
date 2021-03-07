@@ -16,103 +16,108 @@
 
 package org.springframework.ws.transport.http;
 
-import java.io.IOException;
+import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.ws.transport.TransportConstants;
+import java.io.IOException;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.ws.transport.TransportConstants;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("httpserver-applicationContext.xml")
 public class WebServiceHttpHandlerIntegrationTest {
 
 	private HttpClient client;
 
-	@Autowired
-	private int port;
+	@Autowired private int port;
 
 	private String url;
 
-	@Before
-	public void createHttpClient() throws Exception {
+	@BeforeEach
+	public void createHttpClient() {
+
 		client = new HttpClient();
 		url = "http://localhost:" + port + "/service";
 	}
 
 	@Test
 	public void testInvalidMethod() throws IOException {
+
 		GetMethod getMethod = new GetMethod(url);
 		client.executeMethod(getMethod);
-		assertEquals("Invalid Response Code", HttpTransportConstants.STATUS_METHOD_NOT_ALLOWED,
-				getMethod.getStatusCode());
-		assertEquals("Response retrieved", 0, getMethod.getResponseContentLength());
+
+		assertThat(getMethod.getStatusCode()).isEqualTo(HttpTransportConstants.STATUS_METHOD_NOT_ALLOWED);
+		assertThat(getMethod.getResponseContentLength()).isEqualTo(0);
 	}
 
 	@Test
 	public void testNoResponse() throws IOException {
+
 		PostMethod postMethod = new PostMethod(url);
 		postMethod.addRequestHeader(HttpTransportConstants.HEADER_CONTENT_TYPE, "text/xml");
 		postMethod.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION,
 				"http://springframework.org/spring-ws/NoResponse");
 		Resource soapRequest = new ClassPathResource("soapRequest.xml", WebServiceHttpHandlerIntegrationTest.class);
 		postMethod.setRequestEntity(new InputStreamRequestEntity(soapRequest.getInputStream()));
+
 		client.executeMethod(postMethod);
-		assertEquals("Invalid Response Code", HttpTransportConstants.STATUS_ACCEPTED, postMethod.getStatusCode());
-		assertEquals("Response retrieved", 0, postMethod.getResponseContentLength());
+
+		assertThat(postMethod.getStatusCode()).isEqualTo(HttpTransportConstants.STATUS_ACCEPTED);
+		assertThat(postMethod.getResponseContentLength()).isEqualTo(0);
 	}
 
 	@Test
 	public void testResponse() throws IOException {
+
 		PostMethod postMethod = new PostMethod(url);
 		postMethod.addRequestHeader(HttpTransportConstants.HEADER_CONTENT_TYPE, "text/xml");
-		postMethod.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION,
-				"http://springframework.org/spring-ws/Response");
+		postMethod.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION, "http://springframework.org/spring-ws/Response");
 		Resource soapRequest = new ClassPathResource("soapRequest.xml", WebServiceHttpHandlerIntegrationTest.class);
 		postMethod.setRequestEntity(new InputStreamRequestEntity(soapRequest.getInputStream()));
 		client.executeMethod(postMethod);
-		assertEquals("Invalid Response Code", HttpTransportConstants.STATUS_OK, postMethod.getStatusCode());
-		assertTrue("No Response retrieved", postMethod.getResponseContentLength() > 0);
+
+		assertThat(postMethod.getStatusCode()).isEqualTo(HttpTransportConstants.STATUS_OK);
+		assertThat(postMethod.getResponseContentLength()).isGreaterThan(0);
 	}
 
 	@Test
 	public void testNoEndpoint() throws IOException {
+
 		PostMethod postMethod = new PostMethod(url);
 		postMethod.addRequestHeader(HttpTransportConstants.HEADER_CONTENT_TYPE, "text/xml");
 		postMethod.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION,
 				"http://springframework.org/spring-ws/NoEndpoint");
 		Resource soapRequest = new ClassPathResource("soapRequest.xml", WebServiceHttpHandlerIntegrationTest.class);
 		postMethod.setRequestEntity(new InputStreamRequestEntity(soapRequest.getInputStream()));
+
 		client.executeMethod(postMethod);
-		assertEquals("Invalid Response Code", HttpTransportConstants.STATUS_NOT_FOUND, postMethod.getStatusCode());
-		assertEquals("Response retrieved", 0, postMethod.getResponseContentLength());
+
+		assertThat(postMethod.getStatusCode()).isEqualTo(HttpTransportConstants.STATUS_NOT_FOUND);
+		assertThat(postMethod.getResponseContentLength()).isEqualTo(0);
 	}
 
 	@Test
 	public void testFault() throws IOException {
+
 		PostMethod postMethod = new PostMethod(url);
 		postMethod.addRequestHeader(HttpTransportConstants.HEADER_CONTENT_TYPE, "text/xml");
-		postMethod
-				.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION, "http://springframework.org/spring-ws/Fault");
+		postMethod.addRequestHeader(TransportConstants.HEADER_SOAP_ACTION, "http://springframework.org/spring-ws/Fault");
 		Resource soapRequest = new ClassPathResource("soapRequest.xml", WebServiceHttpHandlerIntegrationTest.class);
 		postMethod.setRequestEntity(new InputStreamRequestEntity(soapRequest.getInputStream()));
-		client.executeMethod(postMethod);
-		assertEquals("Invalid Response Code", HttpTransportConstants.STATUS_INTERNAL_SERVER_ERROR,
-				postMethod.getStatusCode());
-		assertTrue("No Response retrieved", postMethod.getResponseContentLength() > 0);
-	}
 
+		client.executeMethod(postMethod);
+
+		assertThat(postMethod.getStatusCode()).isEqualTo(HttpTransportConstants.STATUS_INTERNAL_SERVER_ERROR);
+	}
 }

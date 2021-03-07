@@ -16,49 +16,46 @@
 
 package org.springframework.ws.test.server.integration;
 
+import static org.springframework.ws.test.server.RequestCreators.*;
+import static org.springframework.ws.test.server.ResponseMatchers.*;
+
 import javax.xml.transform.Source;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ws.test.server.MockWebServiceClient;
 import org.springframework.xml.transform.StringSource;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.springframework.ws.test.server.RequestCreators.withPayload;
-import static org.springframework.ws.test.server.ResponseMatchers.payload;
 
 /**
  * @author Arjen Poutsma
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("integration-test.xml")
 public class ServerIntegrationTest {
 
-	@Autowired
-	private ApplicationContext applicationContext;
+	@Autowired private ApplicationContext applicationContext;
 
 	private MockWebServiceClient mockClient;
 
-	@Before
+	@BeforeEach
 	public void createClient() {
 		mockClient = MockWebServiceClient.createClient(applicationContext);
 	}
 
 	@Test
-	public void basic() throws Exception {
-		Source requestPayload = new StringSource("<customerCountRequest xmlns='http://springframework.org/spring-ws'>" +
-				"<customerName>John Doe</customerName>" + "</customerCountRequest>");
+	public void basic() {
+
+		Source requestPayload = new StringSource("<customerCountRequest xmlns='http://springframework.org/spring-ws'>"
+				+ "<customerName>John Doe</customerName>" + "</customerCountRequest>");
 		Source expectedResponsePayload = new StringSource(
-				"<customerCountResponse xmlns='http://springframework.org/spring-ws'>" +
-						"<customerCount>42</customerCount>" + "</customerCountResponse>");
+				"<customerCountResponse xmlns='http://springframework.org/spring-ws'>" + "<customerCount>42</customerCount>"
+						+ "</customerCountResponse>");
 
 		mockClient.sendRequest(withPayload(requestPayload)).andExpect(payload(expectedResponsePayload));
 	}
-
-
 }
